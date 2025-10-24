@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Standard Banjos • Lemon Banjos</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="header"></div>
+
+  <!-- STANDARD BANJOS -->
+  <section id="standard" class="section">
+    <div class="container">
+      <h1 class="section-title">Standard Banjos</h1>
+      <p class="section-tagline">A Lemon has never sounded sweeter!</p>
+
+      <div class="card-grid">
+        <a class="card-link" href="#">
+          <article class="card">
+            <img loading="lazy" src="images/oldtime.jpg" alt="Oldtime Series banjo" class="card-img">
+            <div class="card-body">
+              <h3 class="card-title">Oldtime Series</h3>
+              <p>View 1 Banjo →</p>
+            </div>
+          </article>
+        </a>
+
+        <a class="card-link" href="1935Series.html">
+          <article class="card">
+            <img loading="lazy" src="assets/product_images/l3-3/front.png" alt="1935 Series banjo" class="card-img">
+            <div class="card-body">
+              <h3 class="card-title">1935 Series</h3>
+              <p>View 5 Banjos →</p>
+            </div>
+          </article>
+        </a>
+
+        <a class="card-link" href="#">
+          <article class="card">
+            <img loading="lazy" src="images/1954.jpg" alt="1954 Series banjo" class="card-img">
+            <div class="card-body">
+              <h3 class="card-title">1954 Series</h3>
+              <p>View 4 Banjos →</p>
+            </div>
+          </article>
+        </a>
+
+        <a class="card-link" href="#">
+          <article class="card">
+            <img loading="lazy" src="images/master.jpg" alt="Master Series banjo" class="card-img">
+            <div class="card-body">
+              <h3 class="card-title">Master Series</h3>
+              <p>View 1 Banjo →</p>
+            </div>
+          </article>
+        </a>
+      </div>
+
+      <div class="center">
+        <a class="button" href="#">View All Banjos</a>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer"></div>
+
+  <script>
+    // Inject header & footer dynamically (same as other pages)
+    Promise.all([
+      fetch('header.html').then(r => r.text()).then(h => {
+        document.getElementById('header').innerHTML = h;
+      }),
+      fetch('footer.html').then(r => r.text()).then(f => {
+        document.getElementById('footer').innerHTML = f;
+      })
+    ]).catch(console.error);
+  </script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<header class="site-header">
+  <div class="container">
+    <div class="header-top">
+      <div class="spacer" aria-hidden="true"></div>
+
+      <a id="home-link" class="logo" href="index.html" aria-label="Lemon Banjos — Home">
+        <img src="logo_trans.png" alt="Lemon Banjos logo">
+      </a>
+
+      <button class="hamburger" id="menu-toggle" aria-label="Toggle menu" aria-controls="main-nav" aria-expanded="false">
+        ☰
+      </button>
+    </div>
+
+    <nav class="main-nav nav-centered" id="main-nav">
+	  <a href="index.html">HOME</a>
+      <a href="index.html#about">ABOUT</a>
+      <a href="standardBanjos.html">STANDARD BANJOS</a>
+      <a href="index.html#custom">CUSTOM BANJOS</a>
+      <a href="index.html#sound">HEAR LEMON BANJOS</a>
+    </nav>
+  </div>
+</header>
+<script>
+  // safe-guard: run once per page load after injection
+  (function(){
+    const toggle = document.getElementById('menu-toggle');
+    const nav = document.getElementById('main-nav');
+    if (toggle && nav) {
+      toggle.addEventListener('click', () => {
+        const isOpen = nav.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      });
+    }
+  })();
+</script>
