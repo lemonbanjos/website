@@ -4,25 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Lemon “1935 Series” {{MODEL}}</title>
+  <meta name="description" content="The Lemon L3-00 — handcrafted banjo with prewar-inspired tone and modern playability. Explore specs, finishes, options, and pricing." />
   <link rel="stylesheet" href="styles.css" />
 
-  <!-- EmailJS SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      emailjs.init({ publicKey: 'WYWVsQcBGt69SrK3u' });
-    });
-
-    /* Safe early stub so LemonBanjo is never undefined */
-    window.LemonBanjo = window.LemonBanjo || {
-      getConfig() {
-        const fallbackModel = document.body?.dataset?.model || 'Unknown';
-        return { model: fallbackModel, series: '', base_price: 0, final_price: 0, selections: [] };
-      }
-    };
-  </script>
+  <!-- Preload the LCP hero (this page is L3-00; hard-code for early discovery) -->
+  <link rel="preload" as="image"
+        href="assets/product_images/l3-00/front.webp"
+        imagesizes="(max-width:1024px) 80vw, 1200px">
 
   <style>
+    /* Existing modal styles (unchanged) */
     .lb-modal-backdrop {
       position: fixed; inset: 0; background: rgba(0,0,0,0.55);
       display: none; align-items: center; justify-content: center; z-index: 1000;
@@ -64,6 +55,10 @@
     }
     @keyframes lb-spin { to { transform: rotate(360deg); } }
     .lb-disabled { opacity:0.6; pointer-events:none; }
+
+    /* LCP / CLS helpers */
+    .main-image-wrapper { width: 100%; max-width: 1200px; margin: 0 auto; }
+    .main-image { aspect-ratio: 3 / 2; width: 100%; height: auto; display: block; }
   </style>
 </head>
 <body data-model="L3-00">
@@ -74,14 +69,23 @@
       <div class="product-grid">
         <div class="product-gallery">
           <div class="thumb-rail" role="list">
+            <!-- Thumbnails unchanged; token-swap script will fill in src -->
             <img data-src="assets/product_images/{{MODELLOWER}}/front.webp" data-large="assets/product_images/{{MODELLOWER}}/front.webp" alt="Front view" class="thumbnail active" role="listitem" tabindex="0">
             <img data-src="assets/product_images/{{MODELLOWER}}/back.webp" data-large="assets/product_images/{{MODELLOWER}}/back.webp" alt="Back view" class="thumbnail" role="listitem" tabindex="0">
             <img data-src="assets/product_images/{{MODELLOWER}}/headstockFront.webp" data-large="assets/product_images/{{MODELLOWER}}/headstockFront.webp" alt="Headstock detail" class="thumbnail" role="listitem" tabindex="0">
             <img data-src="assets/product_images/{{MODELLOWER}}/block.webp" data-large="assets/product_images/{{MODELLOWER}}/block.webp" alt="Block rim detail" class="thumbnail" role="listitem" tabindex="0">
             <img data-src="assets/product_images/{{MODELLOWER}}/side.webp" data-large="assets/product_images/{{MODELLOWER}}/side.webp" alt="Side view" class="thumbnail" role="listitem" tabindex="0">
           </div>
+
           <div class="main-image-wrapper">
-            <img data-src="assets/product_images/{{MODELLOWER}}/front.webp" alt="{{MODEL}} banjo — front" class="main-image" id="mainImage">
+            <!-- LCP hero: direct src (no JS swap), eager + high priority -->
+            <img
+              id="mainImage"
+              class="main-image"
+              src="assets/product_images/l3-00/front.webp"
+              width="1200" height="800"
+              decoding="async" loading="eager" fetchpriority="high"
+              alt="{{MODEL}} banjo — front">
           </div>
         </div>
 
@@ -109,6 +113,7 @@
 
   <div id="footer"></div>
 
+  <!-- Lightbox -->
   <div class="lightbox" id="lightbox" aria-modal="true" role="dialog" aria-label="Image viewer">
     <span class="close" aria-label="Close">&times;</span>
     <span class="prev" aria-label="Previous">&#10094;</span>
@@ -116,6 +121,7 @@
     <span class="next" aria-label="Next">&#10095;</span>
   </div>
 
+  <!-- Email modal -->
   <div class="lb-modal-backdrop" id="emailModalBackdrop" aria-hidden="true">
     <div class="lb-modal" role="dialog" aria-modal="true" aria-labelledby="emailModalTitle">
       <h3 id="emailModalTitle">Tell me how to reach you</h3>
@@ -168,6 +174,7 @@
     </div>
   </div>
 
+  <!-- Header/Footer includes -->
   <script>
     Promise.all([
       fetch('header.html').then(r => r.text()).then(h => { document.getElementById('header').innerHTML = h; }),
@@ -175,7 +182,7 @@
     ]).catch(console.error);
   </script>
 
-  <!-- Model + image placeholders -->
+  <!-- Model + image placeholders (thumb rail only; main stays hard-coded for LCP) -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const model = document.body.dataset.model;
@@ -188,31 +195,46 @@
 
       const swapTokens = (s) => s.replace(/\{\{MODELLOWER\}\}/gi, modelLower).replace(/\{\{MODEL\}\}/g, model);
 
-      document.querySelectorAll('.product-gallery img').forEach(img => {
+      // Only process thumbnails; leave #mainImage untouched to keep early paint
+      document.querySelectorAll('.thumb-rail img').forEach(img => {
         const ds = img.getAttribute('data-src');
         const dl = img.getAttribute('data-large');
         if (ds) img.setAttribute('src', swapTokens(ds));
         if (dl) img.setAttribute('data-large', swapTokens(dl));
         if (img.alt) img.alt = img.alt.replace(/\{\{MODEL\}\}/g, model);
       });
-
-      const mainImg = document.getElementById('mainImage');
-      if (mainImg) {
-        const ds = mainImg.getAttribute('data-src');
-        if (ds) mainImg.setAttribute('src', swapTokens(ds));
-        mainImg.setAttribute('alt', `${model} banjo — front`);
-      }
     });
   </script>
 
-  <!-- Email submit: owner + user confirmation; 5s linger -->
+  <!-- Lazy-load EmailJS on demand -->
   <script>
+    // Safe early stub so LemonBanjo is never undefined
+    window.LemonBanjo = window.LemonBanjo || {
+      getConfig() {
+        const fallbackModel = document.body?.dataset?.model || 'Unknown';
+        return { model: fallbackModel, series: '', base_price: 0, final_price: 0, selections: [] };
+      }
+    };
+
     document.addEventListener('DOMContentLoaded', () => {
       const openBtn = document.getElementById('askBtn');
       const backdrop = document.getElementById('emailModalBackdrop');
       const cancelBtn = document.getElementById('cancelEmail');
       const form = document.getElementById('emailForm');
       const statusEl = document.getElementById('emailStatus');
+
+      let emailLoaded = false;
+      async function ensureEmailJS(){
+        if (emailLoaded) return;
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
+          s.onload = resolve; s.onerror = reject; document.head.appendChild(s);
+        });
+        // eslint-disable-next-line no-undef
+        emailjs.init({ publicKey: 'WYWVsQcBGt69SrK3u' });
+        emailLoaded = true;
+      }
 
       function openModal() {
         backdrop.style.display = 'flex';
@@ -225,7 +247,7 @@
         backdrop.setAttribute('aria-hidden', 'true');
       }
 
-      openBtn?.addEventListener('click', openModal);
+      openBtn?.addEventListener('click', async () => { await ensureEmailJS(); openModal(); });
       cancelBtn?.addEventListener('click', closeModal);
       backdrop?.addEventListener('click', (e) => { if (e.target === backdrop) closeModal(); });
 
@@ -311,7 +333,8 @@
           const state      = document.getElementById('custState').value.trim();
           const zip        = document.getElementById('custZip').value.trim();
 
-          const ownerParams = {
+          // eslint-disable-next-line no-undef
+          await emailjs.send(SERVICE_ID, OWNER_TEMPLATE_ID, {
             from_name, from_email, phone, address, city, state, zip,
             model, series,
             base_price: `$${Number(base_price).toLocaleString()}`,
@@ -319,27 +342,19 @@
             selections: selectionsText,
             page_url: pageURL,
             reply_to: from_email
-          };
-
-          const userParams = {
-            name: from_name,
-            email: from_email,
+          });
+          // eslint-disable-next-line no-undef
+          await emailjs.send(SERVICE_ID, USER_TEMPLATE_ID, {
+            name: from_name, email: from_email,
             model, series,
             base_price: `$${Number(base_price).toLocaleString()}`,
             final_price: `$${Number(final_price).toLocaleString()}`,
             selections: selectionsText,
-            page_url: pageURL,
-          };
-
-          await emailjs.send(SERVICE_ID, OWNER_TEMPLATE_ID, ownerParams);
-          await emailjs.send(SERVICE_ID, USER_TEMPLATE_ID, userParams);
+            page_url: pageURL
+          });
 
           statusEl.innerHTML = '<div class="lb-status success"><span class="check" aria-hidden="true"></span><span>Sent! Check your email for a confirmation.</span></div>';
-          setTimeout(() => {
-            form.reset();
-            setFormDisabled(false);
-            closeModal();
-          }, 5000);
+          setTimeout(() => { form.reset(); setFormDisabled(false); closeModal(); }, 5000);
 
         } catch (err) {
           statusEl.innerHTML = '<div class="lb-status error">Sorry—could not send just now. Please try again.</div>';
@@ -349,7 +364,8 @@
     });
   </script>
 
-  <script src="assets/js/productInfo.js"></script>
+  <!-- Defer product logic; keep gallery script deferred -->
+  <script src="assets/js/productInfo.js" defer></script>
   <script src="assets/js/galleryLightbox.js" defer></script>
 </body>
 </html>
