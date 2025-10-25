@@ -5,20 +5,28 @@ on:
     branches: [ main ]
   workflow_dispatch:
   schedule:
-    - cron: "*/10 * * * *"   # every 10 minutes (optional)
+    - cron: "*/10 * * * *"
+
+permissions:
+  contents: write   # <-- needed for git push with GITHUB_TOKEN
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0            # allow pull/rebase
+          persist-credentials: true # uses GITHUB_TOKEN
 
       - name: Fetch tabs as CSV
         run: |
+          set -euo pipefail
           mkdir -p data
-          curl -L "https://docs.google.com/spreadsheets/d/1JaKOJLDKDgEvIg54UKKg2J3fftwOsZlKBw1j5qjeheU/gviz/tq?tqx=out:csv&sheet=Products" -o data/Products.csv
-          curl -L "https://docs.google.com/spreadsheets/d/1JaKOJLDKDgEvIg54UKKg2J3fftwOsZlKBw1j5qjeheU/gviz/tq?tqx=out:csv&sheet=Options"  -o data/Options.csv
-          curl -L "https://docs.google.com/spreadsheets/d/1JaKOJLDKDgEvIg54UKKg2J3fftwOsZlKBw1j5qjeheU/gviz/tq?tqx=out:csv&sheet=Specs"    -o data/Specs.csv
+          curl -fsSL "https://docs.google.com/spreadsheets/d/1JaKOJLDKDgEvIg54UKKg2J3fftwOsZlKBw1j5qjeheU/gviz/tq?tqx=out:csv&sheet=Products" -o data/Products.csv
+          curl -fsSL "https://docs.google.com/spreadsheets/d/1JaKOJLDKDgEvIg54UKKg2J3fftwOsZlKBw1j5qjeheU/gviz/tq?tqx=out:csv&sheet=Options"  -o data/Options.csv
+          curl -fsSL "https://docs.google.com/spreadsheets/d/1JaKOJLDKDgEvIg54UKKg2J3fftwOsZlKBw1j5qjeheU/gviz/tq?tqx=out:csv&sheet=Specs"    -o data/Specs.csv
 
       - name: Convert CSV → compact JSON
         run: |
@@ -33,14 +41,17 @@ jobs:
               )
           PY
 
-      - name: Commit JSON if changed
+      - name: Commit & push JSON if changed
         run: |
-          git config user.name "github-actions"
+          set -e
+          git config user.name  "github-actions"
           git config user.email "actions@users.noreply.github.com"
           git add data/*.json
-          if ! git diff --cached --quiet; then
-            git commit -m "Update data JSON"
-            git push
-          else
+          if git diff --cached --quiet; then
             echo "No JSON changes"
+            exit 0
           fi
+          # make sure we're up to date to avoid non-fast-forward
+          git pull --rebase
+          git commit -m "Update data JSON"
+          git push
