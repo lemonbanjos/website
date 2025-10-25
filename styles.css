@@ -722,7 +722,7 @@ body.modal-open{
 
 .hero {
   position: relative;
-  background: url('assets/images/cover.png') center center / cover no-repeat;
+  background: url('assets/images/cover.webp') center center / cover no-repeat;
   min-height: 70vh; /* Adjust height as desired */
   display: flex;
   align-items: center;
