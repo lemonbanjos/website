@@ -1,21 +1,23 @@
 // =======================================================
 //  Lemon Banjo Product Info (Google Sheets Driven)
-//  - Canonicalized group names (fixes invisible/Unicode/spacing mismatches)
-//  - Honors is_default for provider + dependent groups
-//  - Robust dependency handling & auto-heal on changes
+//  - Same rendering as ORIGINAL file (no HTML/CSS changes needed)
+//  - Unified data loader: AMPPS PHP → /data JSON → direct Google fallback
+//  - Robust to gviz/JSON formats; filters rows by MODEL manually
 //  - Exposes window.LemonBanjo.getConfig() for EmailJS
 // =======================================================
 
+/* ==== CONFIG ==== */
 const SHEET_ID = '1JaKOJLDKDgEvIg54UKKg2J3fftwOsZlKBw1j5qjeheU';
-const GVIZ = (sheet, tq) =>
-  'https://corsproxy.io/?' +
-  'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?' +
-  new URLSearchParams({ sheet, tq }).toString();
+const MODEL = (document.body.dataset.model || 'L3-00').trim();
 
-const MODEL = document.body.dataset.model || 'L3-00';
+/* ==== UTIL ==== */
 const fmtUSD = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
+const cleanStr = v => (v == null ? '' : String(v).replace(/\u00a0/g, ' ').trim());
+const lc = v => cleanStr(v).toLowerCase();
+const canon = s => cleanStr(s).normalize('NFKC').replace(/[^0-9A-Za-z]+/g, ' ').trim().toLowerCase();
+const rows = t => (t?.rows || []).map(r => (r.c || []).map(c => c?.v ?? null));
 
-// ---------- GLOBAL STATE ----------
+/* ==== STATE ==== */
 const LemonState = {
   model: MODEL,
   product: null,
@@ -26,26 +28,90 @@ const LemonState = {
   total: 0
 };
 
-// ---------- HELPERS ----------
-const rows = t => (t?.rows || []).map(r => (r.c || []).map(c => c?.v ?? null));
-const cleanStr = v => (v == null ? '' : String(v).replace(/\u00a0/g, ' ').trim());
-const lc = v => cleanStr(v).toLowerCase();
-const canon = s => cleanStr(s).normalize('NFKC').replace(/[^0-9A-Za-z]+/g, ' ').trim().toLowerCase();
-
-async function gvizQuery(sheet, tq) {
-  const res = await fetch(GVIZ(sheet, tq), { cache: 'no-store' });
-  const txt = await res.text();
-  const json = JSON.parse(txt.substring(47).slice(0, -2));
-  return json.table;
+/* ==== GVIZ TABLE HELPERS ==== */
+function headerIndex(table) {
+  const idx = {};
+  (table.cols || []).forEach((col, i) => {
+    const name = (col.label || col.id || '').toString().trim();
+    idx[canon(name)] = i;
+  });
+  return idx;
+}
+function cellByHeader(row, idx, header) {
+  const i = idx[canon(header)];
+  return i == null ? null : (row[i] ?? null);
 }
 
+/* ==== DATA LOADER (AMPPS → static JSON → Google) ==== */
+function candidateUrls(sheet, tq) {
+  const qs = new URLSearchParams({ sheet, tq }).toString();
+  const gvizDirect = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?${qs}&tqx=out:json`;
+  return [
+    `./api/gviz.php?${qs}`,                                   // AMPPS PHP cache
+    `./data/${encodeURIComponent(sheet)}.json`,               // GitHub Pages static JSON
+    `https://corsproxy.io/?${encodeURIComponent(gvizDirect)}` // fallback
+  ];
+}
+async function fetchText(url, ms = 6000) {
+  const ctrl = new AbortController(); const id = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const res = await fetch(url, { cache: 'no-store', signal: ctrl.signal });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.text();
+  } finally { clearTimeout(id); }
+}
+function toGvizTable(txt) {
+  const trimmed = txt.trim();
+  // a) raw gviz JSON: {"version":...,"table":{...}}
+  if (trimmed.startsWith('{')) {
+    const obj = JSON.parse(trimmed);
+    if (obj && obj.table) return obj.table;
+  }
+  // b) classic gviz prefix: )]}'
+  if (trimmed.startsWith(")]}'")) {
+    const obj = JSON.parse(trimmed.replace(/^\)\]\}'\s*/, ''));
+    if (obj && obj.table) return obj.table;
+  }
+  // c) wrapped callback: google.visualization.Query.setResponse({...})
+  const wrapStart = 'google.visualization.Query.setResponse(';
+  const i = trimmed.indexOf(wrapStart);
+  if (i !== -1) {
+    const start = i + wrapStart.length;
+    const end   = trimmed.lastIndexOf(')');
+    const obj   = JSON.parse(trimmed.slice(start, end));
+    if (obj && obj.table) return obj.table;
+  }
+  // d) static array-of-objects → synthesize table
+  const arr = JSON.parse(trimmed);
+  if (Array.isArray(arr) && arr.length) {
+    const headers = Object.keys(arr[0]);
+    return {
+      cols: headers.map(h => ({ id: h, label: h, type: 'string' })),
+      rows: arr.map(row => ({ c: headers.map(h => ({ v: row[h] })) }))
+    };
+  }
+  throw new Error('Unrecognized data format for GViz table');
+}
+async function gvizQuery(sheet, tq) {
+  const urls = candidateUrls(sheet, tq);
+  let lastErr;
+  for (const url of urls) {
+    try {
+      const txt = await fetchText(url, 7000);
+      const table = toGvizTable(txt);
+      return table;
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr || new Error('All data sources failed');
+}
+
+/* ==== PRICING / DEPENDENCIES (unchanged behavior) ==== */
 function dependencyOk(option, selectedMap) {
   if (!option.dep_groupCanon) return true;
   const selectedVal = lc(selectedMap.get(option.dep_groupCanon));
   if (!selectedVal) return false;
   return selectedVal === lc(option.dep_value);
 }
-
 function calcPrice(base, selected, optionsByCanon) {
   let total = base;
   for (const [canonGroup, optionName] of selected) {
@@ -58,7 +124,6 @@ function calcPrice(base, selected, optionsByCanon) {
   }
   return total;
 }
-
 function chooseDefault(validList, currentName) {
   if (!validList.length) return null;
   if (currentName && validList.some(o => o.option_name === currentName)) return currentName;
@@ -66,23 +131,55 @@ function chooseDefault(validList, currentName) {
   return (def ? def.option_name : validList[0].option_name);
 }
 
-// ---------- LOAD DATA ----------
+/* ==== LOAD DATA (keeps your original display logic) ==== */
 async function loadData(model) {
+  // We fetch ALL columns, then filter by model in JS so it works with static JSON too.
   const [prodT, optT, specT] = await Promise.all([
-    gvizQuery('Products', `select A,B,C,D where A='${model}'`),
-    gvizQuery('Options',  `select B,C,D,E,F,G,H,I,J where A='${model}' order by B asc, G asc`),
-    gvizQuery('Specs',    `select B,C,D,E where A='${model}' order by B asc, E asc`)
+    gvizQuery('Products', `select *`),
+    gvizQuery('Options',  `select *`),
+    gvizQuery('Specs',    `select *`)
   ]);
 
-  const [model_id, title, series, base_price] = rows(prodT)[0] || [];
-  const product = { model_id, title, series, base_price: +base_price || 0 };
+  // ---- Products: locate row where first col (or header "model_id") matches MODEL
+  const pIdx = headerIndex(prodT);
+  const prodRow = rows(prodT).find(r => {
+    const idByHeader = cellByHeader(r, pIdx, 'model_id');
+    const idFallback = r[0];
+    return cleanStr(idByHeader ?? idFallback) === model;
+  }) || [];
+  // Original assumed [A,B,C,D] = [model_id,title,series,base_price]
+  // We still map by header when available for safety.
+  const product = {
+    model_id: cleanStr(cellByHeader(prodRow, pIdx, 'model_id') ?? prodRow[0]),
+    title:    cleanStr(cellByHeader(prodRow, pIdx, 'title')    ?? prodRow[1]),
+    series:   cleanStr(cellByHeader(prodRow, pIdx, 'series')   ?? prodRow[2]),
+    base_price: +(cellByHeader(prodRow, pIdx, 'base_price') ?? prodRow[3] ?? 0) || 0
+  };
 
+  // ---- Options: keep your original shapes, but filter by A == model
+  // Original column intent:
+  // A model_id, B group, C option_name, D price_delta, E price_type, F is_default, G sort, H visible, I dep_group, J dep_value
+  const oIdx = headerIndex(optT);
   const optionsByCanon = {};
   const groupNameMap = {};
-  rows(optT).forEach(([group, option_name, price_delta, price_type, is_default, sort, visible, dep_group, dep_value]) => {
+  rows(optT).forEach(row => {
+    const a_model = cleanStr(cellByHeader(row, oIdx, 'model_id') ?? row[0]);
+    if (a_model !== model) return;
+
+    const group       = cellByHeader(row, oIdx, 'group')        ?? row[1];
+    const option_name = cellByHeader(row, oIdx, 'option_name')  ?? row[2];
+    const price_delta = cellByHeader(row, oIdx, 'price_delta')  ?? row[3];
+    const price_type  = cellByHeader(row, oIdx, 'price_type')   ?? row[4];
+    const is_default  = cellByHeader(row, oIdx, 'is_default')   ?? row[5];
+    const sort        = cellByHeader(row, oIdx, 'sort')         ?? row[6];
+    const visible     = cellByHeader(row, oIdx, 'visible')      ?? row[7];
+    const dep_group   = cellByHeader(row, oIdx, 'dep_group')    ?? row[8];
+    const dep_value   = cellByHeader(row, oIdx, 'dep_value')    ?? row[9];
+
     const groupOrig = cleanStr(group);
     const groupCanon = canon(groupOrig);
     const dep_groupCanon = canon(dep_group || '');
+
     if (!optionsByCanon[groupCanon]) optionsByCanon[groupCanon] = [];
     if (!groupNameMap[groupCanon]) groupNameMap[groupCanon] = groupOrig;
 
@@ -101,24 +198,34 @@ async function loadData(model) {
     });
   });
 
+  // ---- Specs: keep your original card/table build, filter by A == model
+  // Original column intent:
+  // A model_id, B section, C label, D value, E sort
+  const sIdx = headerIndex(specT);
   const specs = {};
-  rows(specT).forEach(([section, label, value, sort]) => {
-    const sec = cleanStr(section);
-    const lab = cleanStr(label);
-    const val = cleanStr(value);
-    if (!sec || !lab || !val) return;
-    if (!specs[sec]) specs[sec] = [];
-    specs[sec].push({ label: lab, value: val, sort: +sort || 0 });
+  rows(specT).forEach(row => {
+    const a_model = cleanStr(cellByHeader(row, sIdx, 'model_id') ?? row[0]);
+    if (a_model !== model) return;
+
+    const section = cleanStr(cellByHeader(row, sIdx, 'section') ?? row[1]);
+    const label   = cleanStr(cellByHeader(row, sIdx, 'label')   ?? row[2]);
+    const value   = cleanStr(cellByHeader(row, sIdx, 'value')   ?? row[3]);
+    const sort    = +(cellByHeader(row, sIdx, 'sort') ?? row[4] ?? 0) || 0;
+
+    if (!section || !label || !value) return;
+    if (!specs[section]) specs[section] = [];
+    specs[section].push({ label, value, sort });
   });
 
   LemonState.product = product;
   LemonState.optionsByCanon = optionsByCanon;
   LemonState.groupNameMap = groupNameMap;
   LemonState.specs = specs;
+
   return { product, optionsByCanon, groupNameMap, specs };
 }
 
-// ---------- RENDER ----------
+/* ==== RENDER (identical UI as your original) ==== */
 function renderHeader(p) {
   const series = cleanStr(p.series);
   const model  = cleanStr(p.title || p.model_id || '');
@@ -142,11 +249,13 @@ function renderOptions(optionsByCanon, groupNameMap) {
   const host = document.getElementById('productOptions');
   const selected = LemonState.selected = LemonState.selected || new Map();
 
+  // Keep original provider/dependent behavior
   const entries = Object.entries(optionsByCanon).map(([gCanon, list]) => [gCanon, [...list].sort((a,b)=>a.sort-b.sort)]);
   const isDependent = ([, list]) => list.some(o => o.dep_groupCanon);
   const providers  = entries.filter(e => !isDependent(e));
   const dependents = entries.filter(e =>  isDependent(e));
 
+  // Defaults for providers first
   for (const [gCanon, list] of providers) {
     const visible = list.filter(o => o.visible);
     if (!visible.length) { selected.delete(gCanon); continue; }
@@ -160,7 +269,6 @@ function renderOptions(optionsByCanon, groupNameMap) {
       if (!valid.length) selected.delete(gCanon);
     }
   }
-
   function normalizeDependents() {
     for (const [gCanon, list] of dependents) {
       const valid = list.filter(o => o.visible && dependencyOk(o, selected));
@@ -229,10 +337,12 @@ function renderSpecs(specs) {
   const grid = document.getElementById('specsGrid');
   if (!grid) return;
   grid.innerHTML = '';
+
   Object.entries(specs).forEach(([section, arr]) => {
     arr.sort((a, b) => a.sort - b.sort);
-    const rowsClean = arr.map(r => ({ label: cleanStr(r.label), value: cleanStr(r.value) }))
-                         .filter(r => r.label && r.value);
+    const rowsClean = arr
+      .map(r => ({ label: cleanStr(r.label), value: cleanStr(r.value) }))
+      .filter(r => r.label && r.value);
     if (!rowsClean.length) return;
 
     const card = document.createElement('article');
@@ -246,7 +356,7 @@ function renderSpecs(specs) {
   });
 }
 
-// ---------- INIT ----------
+/* ==== INIT ==== */
 (async function init() {
   try {
     const { product, optionsByCanon, groupNameMap, specs } = await loadData(MODEL);
@@ -254,15 +364,13 @@ function renderSpecs(specs) {
     renderOptions(optionsByCanon, groupNameMap);
     renderSpecs(specs);
   } catch (err) {
-    console.error(err);
+    console.error('Failed to load config:', err);
     const priceEl = document.getElementById('productPrice');
     if (priceEl) priceEl.textContent = 'Price unavailable';
   }
 })();
 
-/* =======================================================
- * EmailJS Bridge
- * ======================================================= */
+/* ==== EmailJS Bridge ==== */
 window.LemonBanjo = window.LemonBanjo || {};
 window.LemonBanjo.getConfig = function () {
   const p = LemonState.product || {};
