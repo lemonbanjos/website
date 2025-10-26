@@ -1,16 +1,25 @@
-/* galleryLightbox.js (merged)
+/* galleryLightbox.js (original behavior preserved)
    - Thumbnails change the main image (no lightbox on thumb click)
    - Clicking the MAIN image opens the lightbox
-   - Zoom/Pan behavior ported from the previous working version (click-to-zoom toggle,
-     wheel zoom with clamp, drag-to-pan only when zoomed, touch pan), plus robust URL refresh.
+   - Zoom/Pan behavior intact
+   - Safe with late token swaps: prefers resolved `src`, then `data-large`, then `data-src`.
 
-   Safe with late token swaps: always prefers resolved `src`, then `data-large`, then `data-src`.
+   NEW: Lightbox image is upgraded to /lightbox/<file> (same filename)
 */
 
 (function(){
   // ---------- Helpers ----------
   const $ = (sel, root=document) => root.querySelector(sel);
   const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+  // Convert a thumbnail or full path into its lightbox version:
+  // .../<model>/thumbnails/foo.webp  -> .../<model>/lightbox/foo.webp
+  // .../<model>/foo.webp             -> .../<model>/lightbox/foo.webp
+  function toLightboxURL(url){
+    if (!url) return '';
+    if (url.includes('/lightbox/')) return url;
+    return url.replace(/(\/product_images\/[^/]+)\/(?:thumbnails\/)?/, '$1/lightbox/');
+  }
 
   // Common selectors
   const THUMB_SELECTOR = 'img[data-large], .thumb-rail img, .thumbs img, .gallery-thumbs img, .product-thumbs img, img.thumbnail';
@@ -65,15 +74,14 @@
   let images = [];
   let currentIndex = 0;
 
-	function normalizeURLFromThumb(imgEl) {
-	  const dl = imgEl.getAttribute('data-large');
-	  if (dl && dl.trim() && !dl.includes('{{MODELLOWER}}')) return dl.trim();
-	  const s  = imgEl.getAttribute('src');
-	  if (s && s.trim()) return s.trim();
-	  const ds = imgEl.getAttribute('data-src');
-	  return ds ? ds.trim() : '';
-	}
-
+  function normalizeURLFromThumb(imgEl) {
+    const dl = imgEl.getAttribute('data-large');
+    if (dl && dl.trim() && !dl.includes('{{MODELLOWER}}')) return dl.trim();
+    const s  = imgEl.getAttribute('src');
+    if (s && s.trim()) return s.trim();
+    const ds = imgEl.getAttribute('data-src');
+    return ds ? ds.trim() : '';
+  }
 
   function refreshThumbnails(){
     thumbnails = $$(THUMB_SELECTOR);
@@ -108,7 +116,7 @@
     if(!images.length) return;
     currentIndex = Math.max(0, Math.min(idx, images.length-1));
     if(mainImage){
-      mainImage.src = images[currentIndex];
+      mainImage.src = images[currentIndex]; // main viewer stays on normal image path
       const th = thumbnails[currentIndex];
       if(th && th.alt) mainImage.alt = th.alt;
     }
@@ -132,7 +140,7 @@
     if(!images.length) return;
     lightbox.style.display = 'flex';
     document.body.classList.add('modal-open');
-    lightboxImg.src = images[currentIndex];
+    lightboxImg.src = toLightboxURL(images[currentIndex]); // upgraded to /lightbox/
     const th = thumbnails[currentIndex];
     lightboxImg.alt = th && th.alt ? th.alt : '';
     resetTransform();
@@ -148,7 +156,7 @@
     refreshImages();
     if(!images.length) return;
     currentIndex = (i + images.length) % images.length;
-    lightboxImg.src = images[currentIndex];
+    lightboxImg.src = toLightboxURL(images[currentIndex]); // upgraded to /lightbox/
     const th = thumbnails[currentIndex];
     lightboxImg.alt = th && th.alt ? th.alt : '';
     setMain(currentIndex);
@@ -194,7 +202,7 @@
     else if(e.key==='ArrowRight') showImage(currentIndex+1);
   });
 
-  // ---------- Zoom & Pan (ported from old version) ----------
+  // ---------- Zoom & Pan ----------
   let scale = 1, tx = 0, ty = 0;
   let dragging = false, startX = 0, startY = 0, startTx = 0, startTy = 0;
 
