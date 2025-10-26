@@ -65,14 +65,15 @@
   let images = [];
   let currentIndex = 0;
 
-  function normalizeURLFromThumb(imgEl){
-    const s  = imgEl.getAttribute('src');
-    if (s && s.trim() && !s.includes('{{MODELLOWER}}')) return s.trim();
-    const dl = imgEl.getAttribute('data-large');
-    if (dl && dl.trim()) return dl.trim();
-    const ds = imgEl.getAttribute('data-src');
-    return ds ? ds.trim() : '';
-  }
+	function normalizeURLFromThumb(imgEl) {
+	  const dl = imgEl.getAttribute('data-large');
+	  if (dl && dl.trim() && !dl.includes('{{MODELLOWER}}')) return dl.trim();
+	  const s  = imgEl.getAttribute('src');
+	  if (s && s.trim()) return s.trim();
+	  const ds = imgEl.getAttribute('data-src');
+	  return ds ? ds.trim() : '';
+	}
+
 
   function refreshThumbnails(){
     thumbnails = $$(THUMB_SELECTOR);
