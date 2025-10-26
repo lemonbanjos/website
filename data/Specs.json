@@ -1,1 +1,1052 @@
-[{"model_id":"L3-00","section":"Headstock","label":"Shape","value":"00-Style","sort":"1"},{"model_id":"L3-00","section":"Headstock","label":"Inlay","value":"Lemon Logo Only","sort":"3"},{"model_id":"L3-00","section":"Headstock","label":"Overlay Wood","value":"Ebony","sort":"2"},{"model_id":"L3-00","section":"Headstock","label":"Tuners","value":"Buyer's Choice (Gotoh 4:1 by default)","sort":"4"},{"model_id":"L3-00","section":"Headstock","label":"Tuner Buttons","value":"Cream Oval","sort":"5"},{"model_id":"L3-00","section":"Neck","label":"Wood","value":"Straight-grain Maple","sort":"1"},{"model_id":"L3-00","section":"Neck","label":"Truss Rod","value":"Two-Way Adjustable","sort":"2"},{"model_id":"L3-00","section":"Neck","label":"Nut Width","value":"1-3/16\" Unbleached Bone","sort":"3"},{"model_id":"L3-00","section":"Neck","label":"Finish","value":"Dark Sunburst","sort":"4"},{"model_id":"L3-00","section":"Fretboard","label":"Wood","value":"Buyer's Choice (East Indian Rosewood is default)","sort":"1"},{"model_id":"L3-00","section":"Fretboard","label":"Inlay","value":"Dots (5, 7, 10, 12)","sort":"2"},{"model_id":"L3-00","section":"Fretboard","label":"Fretboard Binding","value":"None","sort":"3"},{"model_id":"L3-00","section":"Fretboard","label":"Frets","value":"22 - Nickel Silver (0.106\" × 0.039\")","sort":"4"},{"model_id":"L3-00","section":"Fretboard","label":"Radius","value":"Buyer's Choice (Flat is default)","sort":"5"},{"model_id":"L3-00","section":"Pot Assembly","label":"Rim","value":"11-inch Torrefied Hard Maple Block Rim","sort":"1"},{"model_id":"L3-00","section":"Pot Assembly","label":"Finish","value":"Amber","sort":"2"},{"model_id":"L3-00","section":"Pot Assembly","label":"Metal Hardware","value":"Prucha Nickel Plated","sort":"3"},{"model_id":"L3-00","section":"Pot Assembly","label":"Head","value":"Remo WeatherKing Top Frosted","sort":"4"},{"model_id":"L3-00","section":"Pot Assembly","label":"Bridge","value":"5/8\" Sullivan Roasted Maple","sort":"5"},{"model_id":"L3-00","section":"Pot Assembly","label":"Tone Ring","value":"Buyer's Choice (Wooden Bead by default)","sort":"6"},{"model_id":"L3-00","section":"Resonator","label":"Wood","value":"Straight-grain Maple","sort":"1"},{"model_id":"L3-00","section":"Resonator","label":"Binding","value":"Single White","sort":"2"},{"model_id":"L3-00","section":"Resonator","label":"Finish","value":"Dark Sunburst","sort":"3"},{"model_id":"L3-1","section":"Headstock","label":"Shape","value":"Fiddle-cut","sort":"1"},{"model_id":"L3-1","section":"Headstock","label":"Inlay","value":"Lemon Logo + Inverted Bud","sort":"3"},{"model_id":"L3-1","section":"Headstock","label":"Overlay Wood","value":"Ebony","sort":"2"},{"model_id":"L3-1","section":"Headstock","label":"Tuners","value":"Buyer's Choice (Gotoh 4:1 by default)","sort":"4"},{"model_id":"L3-1","section":"Headstock","label":"Tuner Buttons","value":"Cream Oval","sort":"5"},{"model_id":"L3-1","section":"Neck","label":"Wood","value":"Straight-grain Maple","sort":"1"},{"model_id":"L3-1","section":"Neck","label":"Truss Rod","value":"Two-Way Adjustable","sort":"2"},{"model_id":"L3-1","section":"Neck","label":"Nut Width","value":"1-3/16\" Unbleached Bone","sort":"3"},{"model_id":"L3-1","section":"Neck","label":"Finish","value":"Dark Mahogany","sort":"4"},{"model_id":"L3-1","section":"Fretboard","label":"Wood","value":"Buyer's Choice (East Indian Rosewood is default)","sort":"1"},{"model_id":"L3-1","section":"Fretboard","label":"Inlay","value":"Seagulls","sort":"2"},{"model_id":"L3-1","section":"Fretboard","label":"Fretboard Binding","value":"White","sort":"3"},{"model_id":"L3-1","section":"Fretboard","label":"Frets","value":"22 - Nickel Silver (0.106\" × 0.039\")","sort":"4"},{"model_id":"L3-1","section":"Fretboard","label":"Radius","value":"Buyer's Choice (Flat is default)","sort":"5"},{"model_id":"L3-1","section":"Pot Assembly","label":"Rim","value":"11-inch Torrefied Hard Maple Block Rim","sort":"1"},{"model_id":"L3-1","section":"Pot Assembly","label":"Finish","value":"Dark Mahogany","sort":"2"},{"model_id":"L3-1","section":"Pot Assembly","label":"Metal Hardware","value":"Prucha Nickel Plated","sort":"3"},{"model_id":"L3-1","section":"Pot Assembly","label":"Head","value":"Remo WeatherKing Top Frosted","sort":"4"},{"model_id":"L3-1","section":"Pot Assembly","label":"Bridge","value":"5/8\" Sullivan Roasted Maple","sort":"5"},{"model_id":"L3-1","section":"Pot Assembly","label":"Tone Ring","value":"Buyer's Choice (1/4\" Brass Hoop - Flathead by default)","sort":"6"},{"model_id":"L3-1","section":"Resonator","label":"Wood","value":"Straight-grain Maple","sort":"1"},{"model_id":"L3-1","section":"Resonator","label":"Binding","value":"Double White","sort":"2"},{"model_id":"L3-1","section":"Resonator","label":"Finish","value":"Dark Mahogany","sort":"3"},{"model_id":"L3-3","section":"Headstock","label":"Shape","value":"Double-cut","sort":"1"},{"model_id":"L3-3","section":"Headstock","label":"Inlay","value":"Lemon Logo + Buyer's Choice (Leaves and Bows is default)","sort":"3"},{"model_id":"L3-3","section":"Headstock","label":"Overlay Wood","value":"Ebony","sort":"2"},{"model_id":"L3-3","section":"Headstock","label":"Tuners","value":"Buyer's Choice (Gotoh 4:1 by default)","sort":"4"},{"model_id":"L3-3","section":"Headstock","label":"Tuner Buttons","value":"Cream Oval","sort":"5"},{"model_id":"L3-3","section":"Neck","label":"Wood","value":"Mahogany","sort":"1"},{"model_id":"L3-3","section":"Neck","label":"Truss Rod","value":"Two-Way Adjustable","sort":"2"},{"model_id":"L3-3","section":"Neck","label":"Nut Width","value":"1-3/16\" Unbleached Bone","sort":"3"},{"model_id":"L3-3","section":"Neck","label":"Finish","value":"Vintage Mahogany","sort":"4"},{"model_id":"L3-3","section":"Fretboard","label":"Wood","value":"Buyer's Choice (East Indian Rosewood is default)","sort":"1"},{"model_id":"L3-3","section":"Fretboard","label":"Inlay","value":"Buyer's Choice (Leaves and Bows is default)","sort":"2"},{"model_id":"L3-3","section":"Fretboard","label":"Fretboard Binding","value":"White","sort":"3"},{"model_id":"L3-3","section":"Fretboard","label":"Frets","value":"22 - Nickel Silver (0.106\" × 0.039\")","sort":"4"},{"model_id":"L3-3","section":"Fretboard","label":"Radius","value":"Buyer's Choice (Flat is default)","sort":"5"},{"model_id":"L3-3","section":"Pot Assembly","label":"Rim","value":"11-inch Torrefied Hard Maple Block Rim","sort":"1"},{"model_id":"L3-3","section":"Pot Assembly","label":"Finish","value":"Vintage Mahogany","sort":"2"},{"model_id":"L3-3","section":"Pot Assembly","label":"Metal Hardware","value":"Prucha Nickel Plated","sort":"3"},{"model_id":"L3-3","section":"Pot Assembly","label":"Head","value":"Remo WeatherKing Top Frosted","sort":"4"},{"model_id":"L3-3","section":"Pot Assembly","label":"Bridge","value":"5/8\" Sullivan Roasted Maple","sort":"5"},{"model_id":"L3-3","section":"Pot Assembly","label":"Tone Ring","value":"Buyer's Choice (EZ-Swap - Osage - Flathead is default)","sort":"6"},{"model_id":"L3-3","section":"Resonator","label":"Wood","value":"Mahogany","sort":"1"},{"model_id":"L3-3","section":"Resonator","label":"Binding","value":"Double White","sort":"2"},{"model_id":"L3-3","section":"Resonator","label":"Concentric Rings","value":"White/Black/White","sort":"3"},{"model_id":"L3-3","section":"Resonator","label":"Finish","value":"Vintage Mahogany","sort":"4"},{"model_id":"L3-4","section":"Headstock","label":"Shape","value":"Double-cut","sort":"1"},{"model_id":"L3-4","section":"Headstock","label":"Inlay","value":"Lemon Logo + Buyer's Choice (Flying Eagles is default)","sort":"3"},{"model_id":"L3-4","section":"Headstock","label":"Overlay Wood","value":"Ebony","sort":"2"},{"model_id":"L3-4","section":"Headstock","label":"Tuners","value":"Buyer's Choice (Gotoh 4:1 by default)","sort":"4"},{"model_id":"L3-4","section":"Headstock","label":"Tuner Buttons","value":"Cream Oval","sort":"5"},{"model_id":"L3-4","section":"Neck","label":"Wood","value":"Walnut","sort":"1"},{"model_id":"L3-4","section":"Neck","label":"Truss Rod","value":"Two-Way Adjustable","sort":"2"},{"model_id":"L3-4","section":"Neck","label":"Nut Width","value":"1-3/16\" Unbleached Bone","sort":"3"},{"model_id":"L3-4","section":"Neck","label":"Finish","value":"Natural Walnut","sort":"4"},{"model_id":"L3-4","section":"Fretboard","label":"Wood","value":"Buyer's Choice (East Indian Rosewood is default)","sort":"1"},{"model_id":"L3-4","section":"Fretboard","label":"Inlay","value":"Buyer's Choice (Flying Eagles is default)","sort":"2"},{"model_id":"L3-4","section":"Fretboard","label":"Fretboard Binding","value":"White/Black (outside)","sort":"3"},{"model_id":"L3-4","section":"Fretboard","label":"Frets","value":"22 - Nickel Silver (0.106\" × 0.039\")","sort":"4"},{"model_id":"L3-4","section":"Fretboard","label":"Radius","value":"Buyer's Choice (Flat is default)","sort":"5"},{"model_id":"L3-4","section":"Pot Assembly","label":"Rim","value":"11-inch Torrefied Hard Maple Block Rim","sort":"1"},{"model_id":"L3-4","section":"Pot Assembly","label":"Finish","value":"Tobacco Brown","sort":"2"},{"model_id":"L3-4","section":"Pot Assembly","label":"Metal Hardware","value":"Prucha Chrome Plated","sort":"3"},{"model_id":"L3-4","section":"Pot Assembly","label":"Head","value":"Remo WeatherKing Top Frosted","sort":"4"},{"model_id":"L3-4","section":"Pot Assembly","label":"Bridge","value":"5/8\" Sullivan Roasted Maple","sort":"5"},{"model_id":"L3-4","section":"Pot Assembly","label":"Tone Ring","value":"Buyer's Choice (EZ-Swap - Osage - Flathead is default)","sort":"6"},{"model_id":"L3-4","section":"Resonator","label":"Wood","value":"Burled Walnut","sort":"1"},{"model_id":"L3-4","section":"Resonator","label":"Binding","value":"Double White/Black/White (top and outside)","sort":"2"},{"model_id":"L3-4","section":"Resonator","label":"Concentric Rings","value":"Style 4 Purfling","sort":"3"},{"model_id":"L3-4","section":"Resonator","label":"Finish","value":"Natural Walnut","sort":"4"},{"model_id":"L3-G","section":"Headstock","label":"Shape","value":"Double-cut","sort":"1"},{"model_id":"L3-G","section":"Headstock","label":"Inlay","value":"Lemon Logo + Buyer's Choice (Hearts and Flowers is default)","sort":"3"},{"model_id":"L3-G","section":"Headstock","label":"Overlay Wood","value":"Ebony","sort":"2"},{"model_id":"L3-G","section":"Headstock","label":"Tuners","value":"Buyer's Choice (Gotoh 4:1 by default)","sort":"4"},{"model_id":"L3-G","section":"Headstock","label":"Tuner Buttons","value":"Cream Oval","sort":"5"},{"model_id":"L3-G","section":"Neck","label":"Wood","value":"Curly Maple","sort":"1"},{"model_id":"L3-G","section":"Neck","label":"Truss Rod","value":"Two-Way Adjustable","sort":"2"},{"model_id":"L3-G","section":"Neck","label":"Nut Width","value":"1-3/16\" Unbleached Bone","sort":"3"},{"model_id":"L3-G","section":"Neck","label":"Finish","value":"Tobacco Brown","sort":"4"},{"model_id":"L3-G","section":"Fretboard","label":"Wood","value":"Buyer's Choice (East Indian Rosewood is default)","sort":"1"},{"model_id":"L3-G","section":"Fretboard","label":"Inlay","value":"Buyer's Choice (Hearts and Flowers is default)","sort":"2"},{"model_id":"L3-G","section":"Fretboard","label":"Fretboard Binding","value":"White/Black (outside)","sort":"3"},{"model_id":"L3-G","section":"Fretboard","label":"Frets","value":"22 - Nickel Silver (0.106\" × 0.039\")","sort":"4"},{"model_id":"L3-G","section":"Fretboard","label":"Radius","value":"Buyer's Choice (Flat is default)","sort":"5"},{"model_id":"L3-G","section":"Pot Assembly","label":"Rim","value":"11-inch Torrefied Hard Maple Block Rim","sort":"1"},{"model_id":"L3-G","section":"Pot Assembly","label":"Finish","value":"Tobacco Brown","sort":"2"},{"model_id":"L3-G","section":"Pot Assembly","label":"Metal Hardware","value":"Prucha Gold Plated w/ engraved Tension Hoop, Armrest, and Tailpiece","sort":"3"},{"model_id":"L3-G","section":"Pot Assembly","label":"Head","value":"Remo WeatherKing Top Frosted","sort":"4"},{"model_id":"L3-G","section":"Pot Assembly","label":"Bridge","value":"5/8\" Sullivan Roasted Maple","sort":"5"},{"model_id":"L3-G","section":"Pot Assembly","label":"Tone Ring","value":"Buyer's Choice (EZ-Swap - Osage - Flathead is default)","sort":"6"},{"model_id":"L3-G","section":"Resonator","label":"Wood","value":"Curly Maple","sort":"1"},{"model_id":"L3-G","section":"Resonator","label":"Binding","value":"Double White/Black/White (top and outside)","sort":"2"},{"model_id":"L3-G","section":"Resonator","label":"Finish","value":"Tobacco Sunburst","sort":"3"}]
+[
+  {
+    "model_id": "L3-00",
+    "section": "Headstock",
+    "label": "Shape",
+    "value": "00-Style",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-00",
+    "section": "Headstock",
+    "label": "Inlay",
+    "value": "Lemon Logo Only",
+    "sort": 3
+  },
+  {
+    "model_id": "L3-00",
+    "section": "Headstock",
+    "label": "Overlay Wood",
+    "value": "Ebony",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-00",
+    "section": "Headstock",
+    "label": "Tuners",
+    "value": "Buyer's Choice (Gotoh 4:1 by default)",
+    "sort": 4
+  },
+  {
+    "model_id": "L3-00",
+    "section": "Headstock",
+    "label": "Tuner Buttons",
+    "value": "Cream Oval",
+    "sort": 5
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-00",
+    "section": "Neck",
+    "label": "Wood",
+    "value": "Straight-grain Maple",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-00",
+    "section": "Neck",
+    "label": "Truss Rod",
+    "value": "Two-Way Adjustable",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-00",
+    "section": "Neck",
+    "label": "Nut Width",
+    "value": "1-3/16\" Unbleached Bone",
+    "sort": 3
+  },
+  {
+    "model_id": "L3-00",
+    "section": "Neck",
+    "label": "Finish",
+    "value": "Dark Sunburst",
+    "sort": 4
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-00",
+    "section": "Fretboard",
+    "label": "Wood",
+    "value": "Buyer's Choice (East Indian Rosewood is default)",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-00",
+    "section": "Fretboard",
+    "label": "Inlay",
+    "value": "Dots (5, 7, 10, 12)",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-00",
+    "section": "Fretboard",
+    "label": "Fretboard Binding",
+    "value": "None",
+    "sort": 3
+  },
+  {
+    "model_id": "L3-00",
+    "section": "Fretboard",
+    "label": "Frets",
+    "value": "22 - Nickel Silver (0.106\" × 0.039\")",
+    "sort": 4
+  },
+  {
+    "model_id": "L3-00",
+    "section": "Fretboard",
+    "label": "Radius",
+    "value": "Buyer's Choice (Flat is default)",
+    "sort": 5
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-00",
+    "section": "Pot Assembly",
+    "label": "Rim",
+    "value": "11-inch Torrefied Hard Maple Block Rim",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-00",
+    "section": "Pot Assembly",
+    "label": "Finish",
+    "value": "Amber",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-00",
+    "section": "Pot Assembly",
+    "label": "Metal Hardware",
+    "value": "Prucha Nickel Plated",
+    "sort": 3
+  },
+  {
+    "model_id": "L3-00",
+    "section": "Pot Assembly",
+    "label": "Head",
+    "value": "Remo WeatherKing Top Frosted",
+    "sort": 4
+  },
+  {
+    "model_id": "L3-00",
+    "section": "Pot Assembly",
+    "label": "Bridge",
+    "value": "5/8\" Sullivan Roasted Maple",
+    "sort": 5
+  },
+  {
+    "model_id": "L3-00",
+    "section": "Pot Assembly",
+    "label": "Tone Ring",
+    "value": "Buyer's Choice (Wooden Bead by default)",
+    "sort": 6
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-00",
+    "section": "Resonator",
+    "label": "Wood",
+    "value": "Straight-grain Maple",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-00",
+    "section": "Resonator",
+    "label": "Binding",
+    "value": "Single White",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-00",
+    "section": "Resonator",
+    "label": "Finish",
+    "value": "Dark Sunburst",
+    "sort": 3
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Headstock",
+    "label": "Shape",
+    "value": "Fiddle-cut",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Headstock",
+    "label": "Inlay",
+    "value": "Lemon Logo + Inverted Bud",
+    "sort": 3
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Headstock",
+    "label": "Overlay Wood",
+    "value": "Ebony",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Headstock",
+    "label": "Tuners",
+    "value": "Buyer's Choice (Gotoh 4:1 by default)",
+    "sort": 4
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Headstock",
+    "label": "Tuner Buttons",
+    "value": "Cream Oval",
+    "sort": 5
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Neck",
+    "label": "Wood",
+    "value": "Straight-grain Maple",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Neck",
+    "label": "Truss Rod",
+    "value": "Two-Way Adjustable",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Neck",
+    "label": "Nut Width",
+    "value": "1-3/16\" Unbleached Bone",
+    "sort": 3
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Neck",
+    "label": "Finish",
+    "value": "Dark Mahogany",
+    "sort": 4
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Fretboard",
+    "label": "Wood",
+    "value": "Buyer's Choice (East Indian Rosewood is default)",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Fretboard",
+    "label": "Inlay",
+    "value": "Seagulls",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Fretboard",
+    "label": "Fretboard Binding",
+    "value": "White",
+    "sort": 3
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Fretboard",
+    "label": "Frets",
+    "value": "22 - Nickel Silver (0.106\" × 0.039\")",
+    "sort": 4
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Fretboard",
+    "label": "Radius",
+    "value": "Buyer's Choice (Flat is default)",
+    "sort": 5
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Pot Assembly",
+    "label": "Rim",
+    "value": "11-inch Torrefied Hard Maple Block Rim",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Pot Assembly",
+    "label": "Finish",
+    "value": "Dark Mahogany",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Pot Assembly",
+    "label": "Metal Hardware",
+    "value": "Prucha Nickel Plated",
+    "sort": 3
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Pot Assembly",
+    "label": "Head",
+    "value": "Remo WeatherKing Top Frosted",
+    "sort": 4
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Pot Assembly",
+    "label": "Bridge",
+    "value": "5/8\" Sullivan Roasted Maple",
+    "sort": 5
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Pot Assembly",
+    "label": "Tone Ring",
+    "value": "Buyer's Choice (1/4\" Brass Hoop - Flathead by default)",
+    "sort": 6
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Resonator",
+    "label": "Wood",
+    "value": "Straight-grain Maple",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Resonator",
+    "label": "Binding",
+    "value": "Double White",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-1",
+    "section": "Resonator",
+    "label": "Finish",
+    "value": "Dark Mahogany",
+    "sort": 3
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Headstock",
+    "label": "Shape",
+    "value": "Double-cut",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Headstock",
+    "label": "Inlay",
+    "value": "Lemon Logo + Buyer's Choice (Leaves and Bows is default)",
+    "sort": 3
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Headstock",
+    "label": "Overlay Wood",
+    "value": "Ebony",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Headstock",
+    "label": "Tuners",
+    "value": "Buyer's Choice (Gotoh 4:1 by default)",
+    "sort": 4
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Headstock",
+    "label": "Tuner Buttons",
+    "value": "Cream Oval",
+    "sort": 5
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Neck",
+    "label": "Wood",
+    "value": "Mahogany",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Neck",
+    "label": "Truss Rod",
+    "value": "Two-Way Adjustable",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Neck",
+    "label": "Nut Width",
+    "value": "1-3/16\" Unbleached Bone",
+    "sort": 3
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Neck",
+    "label": "Finish",
+    "value": "Vintage Mahogany",
+    "sort": 4
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Fretboard",
+    "label": "Wood",
+    "value": "Buyer's Choice (East Indian Rosewood is default)",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Fretboard",
+    "label": "Inlay",
+    "value": "Buyer's Choice (Leaves and Bows is default)",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Fretboard",
+    "label": "Fretboard Binding",
+    "value": "White",
+    "sort": 3
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Fretboard",
+    "label": "Frets",
+    "value": "22 - Nickel Silver (0.106\" × 0.039\")",
+    "sort": 4
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Fretboard",
+    "label": "Radius",
+    "value": "Buyer's Choice (Flat is default)",
+    "sort": 5
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Pot Assembly",
+    "label": "Rim",
+    "value": "11-inch Torrefied Hard Maple Block Rim",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Pot Assembly",
+    "label": "Finish",
+    "value": "Vintage Mahogany",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Pot Assembly",
+    "label": "Metal Hardware",
+    "value": "Prucha Nickel Plated",
+    "sort": 3
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Pot Assembly",
+    "label": "Head",
+    "value": "Remo WeatherKing Top Frosted",
+    "sort": 4
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Pot Assembly",
+    "label": "Bridge",
+    "value": "5/8\" Sullivan Roasted Maple",
+    "sort": 5
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Pot Assembly",
+    "label": "Tone Ring",
+    "value": "Buyer's Choice (EZ-Swap - Osage - Flathead is default)",
+    "sort": 6
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Resonator",
+    "label": "Wood",
+    "value": "Mahogany",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Resonator",
+    "label": "Binding",
+    "value": "Double White",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Resonator",
+    "label": "Concentric Rings",
+    "value": "White/Black/White",
+    "sort": 3
+  },
+  {
+    "model_id": "L3-3",
+    "section": "Resonator",
+    "label": "Finish",
+    "value": "Vintage Mahogany",
+    "sort": 4
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Headstock",
+    "label": "Shape",
+    "value": "Double-cut",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Headstock",
+    "label": "Inlay",
+    "value": "Lemon Logo + Buyer's Choice (Flying Eagles is default)",
+    "sort": 3
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Headstock",
+    "label": "Overlay Wood",
+    "value": "Ebony",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Headstock",
+    "label": "Tuners",
+    "value": "Buyer's Choice (Gotoh 4:1 by default)",
+    "sort": 4
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Headstock",
+    "label": "Tuner Buttons",
+    "value": "Cream Oval",
+    "sort": 5
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Neck",
+    "label": "Wood",
+    "value": "Walnut",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Neck",
+    "label": "Truss Rod",
+    "value": "Two-Way Adjustable",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Neck",
+    "label": "Nut Width",
+    "value": "1-3/16\" Unbleached Bone",
+    "sort": 3
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Neck",
+    "label": "Finish",
+    "value": "Natural Walnut",
+    "sort": 4
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Fretboard",
+    "label": "Wood",
+    "value": "Buyer's Choice (East Indian Rosewood is default)",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Fretboard",
+    "label": "Inlay",
+    "value": "Buyer's Choice (Flying Eagles is default)",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Fretboard",
+    "label": "Fretboard Binding",
+    "value": "White/Black (outside)",
+    "sort": 3
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Fretboard",
+    "label": "Frets",
+    "value": "22 - Nickel Silver (0.106\" × 0.039\")",
+    "sort": 4
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Fretboard",
+    "label": "Radius",
+    "value": "Buyer's Choice (Flat is default)",
+    "sort": 5
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Pot Assembly",
+    "label": "Rim",
+    "value": "11-inch Torrefied Hard Maple Block Rim",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Pot Assembly",
+    "label": "Finish",
+    "value": "Tobacco Brown",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Pot Assembly",
+    "label": "Metal Hardware",
+    "value": "Prucha Chrome Plated",
+    "sort": 3
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Pot Assembly",
+    "label": "Head",
+    "value": "Remo WeatherKing Top Frosted",
+    "sort": 4
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Pot Assembly",
+    "label": "Bridge",
+    "value": "5/8\" Sullivan Roasted Maple",
+    "sort": 5
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Pot Assembly",
+    "label": "Tone Ring",
+    "value": "Buyer's Choice (EZ-Swap - Osage - Flathead is default)",
+    "sort": 6
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Resonator",
+    "label": "Wood",
+    "value": "Burled Walnut",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Resonator",
+    "label": "Binding",
+    "value": "Double White/Black/White (top and outside)",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Resonator",
+    "label": "Concentric Rings",
+    "value": "Style 4 Purfling",
+    "sort": 3
+  },
+  {
+    "model_id": "L3-4",
+    "section": "Resonator",
+    "label": "Finish",
+    "value": "Natural Walnut",
+    "sort": 4
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Headstock",
+    "label": "Shape",
+    "value": "Double-cut",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Headstock",
+    "label": "Inlay",
+    "value": "Lemon Logo + Buyer's Choice (Hearts and Flowers is default)",
+    "sort": 3
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Headstock",
+    "label": "Overlay Wood",
+    "value": "Ebony",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Headstock",
+    "label": "Tuners",
+    "value": "Buyer's Choice (Gotoh 4:1 by default)",
+    "sort": 4
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Headstock",
+    "label": "Tuner Buttons",
+    "value": "Cream Oval",
+    "sort": 5
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Neck",
+    "label": "Wood",
+    "value": "Curly Maple",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Neck",
+    "label": "Truss Rod",
+    "value": "Two-Way Adjustable",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Neck",
+    "label": "Nut Width",
+    "value": "1-3/16\" Unbleached Bone",
+    "sort": 3
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Neck",
+    "label": "Finish",
+    "value": "Tobacco Brown",
+    "sort": 4
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Fretboard",
+    "label": "Wood",
+    "value": "Buyer's Choice (East Indian Rosewood is default)",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Fretboard",
+    "label": "Inlay",
+    "value": "Buyer's Choice (Hearts and Flowers is default)",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Fretboard",
+    "label": "Fretboard Binding",
+    "value": "White/Black (outside)",
+    "sort": 3
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Fretboard",
+    "label": "Frets",
+    "value": "22 - Nickel Silver (0.106\" × 0.039\")",
+    "sort": 4
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Fretboard",
+    "label": "Radius",
+    "value": "Buyer's Choice (Flat is default)",
+    "sort": 5
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Pot Assembly",
+    "label": "Rim",
+    "value": "11-inch Torrefied Hard Maple Block Rim",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Pot Assembly",
+    "label": "Finish",
+    "value": "Tobacco Brown",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Pot Assembly",
+    "label": "Metal Hardware",
+    "value": "Prucha Gold Plated w/ engraved Tension Hoop, Armrest, and Tailpiece",
+    "sort": 3
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Pot Assembly",
+    "label": "Head",
+    "value": "Remo WeatherKing Top Frosted",
+    "sort": 4
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Pot Assembly",
+    "label": "Bridge",
+    "value": "5/8\" Sullivan Roasted Maple",
+    "sort": 5
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Pot Assembly",
+    "label": "Tone Ring",
+    "value": "Buyer's Choice (EZ-Swap - Osage - Flathead is default)",
+    "sort": 6
+  },
+  {
+    "model_id": "",
+    "section": "",
+    "label": "",
+    "value": "",
+    "sort": ""
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Resonator",
+    "label": "Wood",
+    "value": "Curly Maple",
+    "sort": 1
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Resonator",
+    "label": "Binding",
+    "value": "Double White/Black/White (top and outside)",
+    "sort": 2
+  },
+  {
+    "model_id": "L3-G",
+    "section": "Resonator",
+    "label": "Finish",
+    "value": "Tobacco Sunburst",
+    "sort": 3
+  }
+]
