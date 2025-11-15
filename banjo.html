@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Lemon “1935 Series” {{MODEL}}</title>
+  <title>Lemon Banjo</title>
   <link rel="stylesheet" href="styles.css" />
 
   <!-- EmailJS SDK -->
@@ -15,14 +15,14 @@
 
     /* Safe early stub so LemonBanjo is never undefined */
     window.LemonBanjo = window.LemonBanjo || {
-      getConfig() {
-        const fallbackModel = document.body?.dataset?.model || 'Unknown';
-        return { model: fallbackModel, series: '', base_price: 0, final_price: 0, selections: [] };
-      }
+      _cfg: { id: '', series: '', model: '', base_price: 0, final_price: 0, selections: [] },
+      setConfig(cfg) { this._cfg = { ...this._cfg, ...cfg }; },
+      getConfig() { return this._cfg; }
     };
   </script>
 
   <style>
+    /* Email modal styles */
     .lb-modal-backdrop {
       position: fixed; inset: 0; background: rgba(0,0,0,0.55);
       display: none; align-items: center; justify-content: center; z-index: 1000;
@@ -36,15 +36,16 @@
     .lb-row { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
     .lb-modal label { font-size: 0.9rem; display:block; margin-bottom: 4px; }
     .lb-modal input {
-      width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: #f5f5f5;
+      width: 100%; padding: 10px; border-radius: 8px;
+      border: 1px solid #333; background: #1a1a1a; color: #f5f5f5;
     }
     .lb-actions { display:flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
-    .lb-btn { padding: 10px 14px; border: 1px solid #3a3a3a; border-radius: 8px; background:#222; color:#eee; cursor:pointer; }
+    .lb-btn { padding: 10px 14px; border: 1px solid #3a3a3a;
+      border-radius: 8px; background:#222; color:#eee; cursor:pointer; }
     .lb-btn.primary { background: #1e7a1e; border-color:#1e7a1e; }
     .lb-note { font-size: 0.85rem; color:#aaa; }
     .lb-hidden { display:none; }
 
-    /* Status styles */
     #emailStatus { margin-top: 4px; }
     .lb-status { display:flex; align-items:center; gap:8px; }
     .lb-status .spinner {
@@ -60,13 +61,15 @@
     }
     .lb-status .check::after {
       content:""; position:absolute; left:4px; top:2px;
-      width:6px; height:10px; border-right:2px solid #fff; border-bottom:2px solid #fff; transform:rotate(45deg);
+      width:6px; height:10px; border-right:2px solid #fff;
+      border-bottom:2px solid #fff; transform:rotate(45deg);
     }
     @keyframes lb-spin { to { transform: rotate(360deg); } }
     .lb-disabled { opacity:0.6; pointer-events:none; }
   </style>
 </head>
-<body data-model="L3-4">
+
+<body>
   <div id="header"></div>
 
   <section class="product">
@@ -74,59 +77,30 @@
       <div class="product-grid">
         <div class="product-gallery">
           <div class="thumb-rail" role="list">
-			  <img
-				data-src="assets/product_images/{{MODELLOWER}}/thumbnails/front.webp"
-				data-large="assets/product_images/{{MODELLOWER}}/front.webp"
-				alt="Front view"
-				class="thumbnail active"
-				role="listitem"
-				tabindex="0"
-			  >
-			  <img
-				data-src="assets/product_images/{{MODELLOWER}}/thumbnails/back.webp"
-				data-large="assets/product_images/{{MODELLOWER}}/back.webp"
-				alt="Back view"
-				class="thumbnail"
-				role="listitem"
-				tabindex="0"
-			  >
-			  <img
-				data-src="assets/product_images/{{MODELLOWER}}/thumbnails/headstockFront.webp"
-				data-large="assets/product_images/{{MODELLOWER}}/headstockFront.webp"
-				alt="Headstock detail"
-				class="thumbnail"
-				role="listitem"
-				tabindex="0"
-			  >
-			  <img
-				data-src="assets/product_images/{{MODELLOWER}}/thumbnails/block.webp"
-				data-large="assets/product_images/{{MODELLOWER}}/block.webp"
-				alt="Block rim detail"
-				class="thumbnail"
-				role="listitem"
-				tabindex="0"
-			  >
-			  <img
-				data-src="assets/product_images/{{MODELLOWER}}/thumbnails/side.webp"
-				data-large="assets/product_images/{{MODELLOWER}}/side.webp"
-				alt="Side view"
-				class="thumbnail"
-				role="listitem"
-				tabindex="0"
-			  >
-			</div>
+            <img data-role="thumb-front"     alt="Front view"       class="thumbnail active" role="listitem" tabindex="0">
+            <img data-role="thumb-back"      alt="Back view"        class="thumbnail"        role="listitem" tabindex="0">
+            <img data-role="thumb-headstock" alt="Headstock detail" class="thumbnail"        role="listitem" tabindex="0">
+            <img data-role="thumb-block"     alt="Block rim detail" class="thumbnail"        role="listitem" tabindex="0">
+            <img data-role="thumb-side"      alt="Side view"        class="thumbnail"        role="listitem" tabindex="0">
+          </div>
+
           <div class="main-image-wrapper">
-            <img data-src="assets/product_images/{{MODELLOWER}}/front.webp" alt="{{MODEL}} banjo — front" class="main-image" id="mainImage">
+            <img
+              alt="Banjo — front"
+              class="main-image"
+              id="mainImage">
           </div>
         </div>
 
         <div class="product-details">
-          <p id="seriesText">Lemon Banjos — # Series</p>
-          <h1 class="product-title" id="productTitle">{{MODEL}}</h1>
+          <p id="seriesText">Lemon Banjos</p>
+          <h1 class="product-title" id="productTitle">Loading…</h1>
           <h2><em id="productPrice" aria-live="polite">Loading…</em></h2>
 
           <div id="productOptions" aria-describedby="optionsHelp"></div>
-          <p id="optionsHelp" class="small" style="margin-top:-8px">Choose configuration to see updated price.</p>
+          <p id="optionsHelp" class="small" style="margin-top:-8px">
+            Choose configuration to see updated price.
+          </p>
 
           <button class="button" id="askBtn" type="button">Ask About This Banjo</button>
           <div class="product-description" id="productDescription"></div>
@@ -151,6 +125,7 @@
     <span class="next" aria-label="Next">&#10095;</span>
   </div>
 
+  <!-- Email modal -->
   <div class="lb-modal-backdrop" id="emailModalBackdrop" aria-hidden="true">
     <div class="lb-modal" role="dialog" aria-modal="true" aria-labelledby="emailModalTitle">
       <h3 id="emailModalTitle">Tell me how to reach you</h3>
@@ -203,6 +178,7 @@
     </div>
   </div>
 
+  <!-- Load header/footer -->
   <script>
     Promise.all([
       fetch('header.html').then(r => r.text()).then(h => { document.getElementById('header').innerHTML = h; }),
@@ -210,40 +186,94 @@
     ]).catch(console.error);
   </script>
 
-  <!-- Model + image placeholders -->
+  <!-- Routing + image paths from ?key=LEGACY35-LB-00 -->
   <script>
+    function getProductKeyFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const raw = params.get('key');
+      if (!raw) return null;
+      return String(raw).trim().toUpperCase();
+    }
+
+    function deriveImageInfo(key) {
+  const upper = String(key || '').toUpperCase();
+  const parts = upper.split('-');          // ["LEGACY35", "LB", "00"]
+  const seriesKey = parts[0] || '';        // "LEGACY35"
+  const modelCode = parts.slice(1).join('-') || upper; // "LB-00"
+  const modelSlug = modelCode.toLowerCase();           // "lb-00"
+
+  let folder = '35';   // sensible default so something loads
+
+  if (seriesKey.startsWith('LEGACY')) {
+    // Take the numeric part after "LEGACY", e.g. "35", "54", "27", "60"
+    const num = seriesKey.replace('LEGACY', '').trim();  // "35"
+    folder = num || '35';    // e.g. "35" → assets/product_images/35/...
+  } else if (seriesKey.startsWith('OLDTIME')) {
+    folder = 'ot';
+  } else if (seriesKey.startsWith('MASTER')) {
+    folder = 'master';
+  }
+
+  return { folder, modelCode, modelSlug };
+}
+
+
     document.addEventListener('DOMContentLoaded', () => {
-      const model = document.body.dataset.model;
-      if (!model) return;
-      const modelLower = model.toLowerCase();
+      const key = getProductKeyFromUrl() || 'LEGACY35-LB-00';
 
-      document.title = `Lemon “1935 Series” ${model}`;
-      const titleEl = document.getElementById('productTitle');
-      if (titleEl) titleEl.textContent = model;
+      // Expose key for productInfo.js (fallback) and debugging
+      document.body.dataset.model = key;
 
-      const swapTokens = (s) => s.replace(/\{\{MODELLOWER\}\}/gi, modelLower).replace(/\{\{MODEL\}\}/g, model);
+      const { folder, modelCode, modelSlug } = deriveImageInfo(key);
 
-      document.querySelectorAll('.product-gallery img').forEach(img => {
-        const ds = img.getAttribute('data-src');
-        const dl = img.getAttribute('data-large');
-        if (ds) img.setAttribute('src', swapTokens(ds));
-        if (dl) img.setAttribute('data-large', swapTokens(dl));
-        if (img.alt) img.alt = img.alt.replace(/\{\{MODEL\}\}/g, model);
-      });
+// Just set a generic placeholder here;
+// productInfo.js will replace it with the real "Legacy ’35 Series" from the sheet.
+const seriesEl = document.getElementById('seriesText');
+if (seriesEl) {
+  seriesEl.textContent = 'Lemon Banjos';
+}
+
+
+      const base = `assets/product_images/${folder}/${modelSlug}/`;
 
       const mainImg = document.getElementById('mainImage');
       if (mainImg) {
-        const ds = mainImg.getAttribute('data-src');
-        if (ds) mainImg.setAttribute('src', swapTokens(ds));
-        mainImg.setAttribute('alt', `${model} banjo — front`);
+        mainImg.src = base + 'front.webp';
+        mainImg.alt = `${modelCode} banjo — front`;
+        mainImg.setAttribute('data-large', base + 'front.webp');
+      }
+
+      const thumbMap = {
+        'thumb-front':     'front.webp',
+        'thumb-back':      'back.webp',
+        'thumb-headstock': 'headstockFront.webp',
+        'thumb-block':     'block.webp',
+        'thumb-side':      'side.webp'
+      };
+
+      document.querySelectorAll('.thumb-rail img').forEach(img => {
+        const role = img.dataset.role;
+        const file = thumbMap[role];
+        if (!file) return;
+        img.src = base + 'thumbnails/' + file;
+        img.setAttribute('data-large', base + file);
+      });
+
+      // Seed minimal config for EmailJS in case someone clicks quickly
+      if (window.LemonBanjo && typeof window.LemonBanjo.setConfig === 'function') {
+        window.LemonBanjo.setConfig({
+  id: key,
+  series: '',          // productInfo.js will fill this in from the sheet
+  model: modelCode
+});
       }
     });
   </script>
 
-  <!-- Email submit: owner + user confirmation; 5s linger -->
+  <!-- Email submit logic (uses LemonBanjo.getConfig) -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const openBtn = document.getElementById('askBtn');
+      const openBtn  = document.getElementById('askBtn');
       const backdrop = document.getElementById('emailModalBackdrop');
       const cancelBtn = document.getElementById('cancelEmail');
       const form = document.getElementById('emailForm');
@@ -262,7 +292,7 @@
 
       openBtn?.addEventListener('click', openModal);
       cancelBtn?.addEventListener('click', closeModal);
-      backdrop?.addEventListener('click', (e) => { if (e.target === backdrop) closeModal(); });
+      backdrop?.addEventListener('click', e => { if (e.target === backdrop) closeModal(); });
 
       function setFormDisabled(disabled) {
         const btn = document.getElementById('sendEmail');
@@ -277,6 +307,7 @@
         const n = parseFloat(String(s || '').replace(/[^0-9.]/g, ''));
         return Number.isFinite(n) ? n : 0;
       }
+
       function selectionsFromDOM() {
         const out = [];
         document.querySelectorAll('#productOptions .option-block').forEach(block => {
@@ -297,24 +328,24 @@
         return out;
       }
 
-      form?.addEventListener('submit', async (e) => {
+      form?.addEventListener('submit', async e => {
         e.preventDefault();
         setFormDisabled(true);
 
         statusEl.innerHTML = '<div class="lb-status"><span class="spinner" aria-hidden="true"></span><span>Sending…</span></div>';
         statusEl.classList.remove('lb-hidden');
 
-        const SERVICE_ID = 'service_wbxklc2';
+        const SERVICE_ID        = 'service_wbxklc2';
         const OWNER_TEMPLATE_ID = 'lemon_info_notice';
         const USER_TEMPLATE_ID  = 'customer_confirmation';
 
         try {
-          const cfg = (window.LemonBanjo && window.LemonBanjo.getConfig) ? window.LemonBanjo.getConfig() : null;
-
+          const cfg = window.LemonBanjo.getConfig ? window.LemonBanjo.getConfig() : {};
           const pageURL = window.location.href;
-          const model = cfg?.model || (document.body.dataset.model || 'Unknown');
 
-          let series = (cfg?.series || '').trim();
+          const model  = cfg.model  || (document.body.dataset.model || 'Unknown');
+          let   series = (cfg.series || '').trim();
+
           if (!series) {
             const sTxt = (document.getElementById('seriesText')?.textContent || '').trim();
             const m = sTxt.match(/—\s*(.+)$/);
@@ -322,18 +353,22 @@
           }
 
           const priceEl = document.getElementById('productPrice');
-          let base_price = (typeof cfg?.base_price === 'number') ? cfg.base_price : NaN;
+
+          let base_price = (typeof cfg.base_price === 'number') ? cfg.base_price : NaN;
           if (!Number.isFinite(base_price)) {
             const baseAttr = Number(priceEl?.dataset?.base ?? NaN);
             base_price = Number.isFinite(baseAttr) ? baseAttr : NaN;
           }
           if (!Number.isFinite(base_price)) base_price = 0;
 
-          let final_price = (typeof cfg?.final_price === 'number') ? cfg.final_price : NaN;
+          let final_price = (typeof cfg.final_price === 'number') ? cfg.final_price : NaN;
           if (!Number.isFinite(final_price)) final_price = parseMoney(priceEl?.textContent);
           if (!Number.isFinite(final_price)) final_price = base_price;
 
-          let selections = Array.isArray(cfg?.selections) && cfg.selections.length ? cfg.selections : selectionsFromDOM();
+          let selections = Array.isArray(cfg.selections) && cfg.selections.length
+            ? cfg.selections
+            : selectionsFromDOM();
+
           const selectionsText = selections.length
             ? selections.map(([g,v]) => `${g}: ${v}`).join('\n')
             : '(no selections)';
@@ -363,7 +398,7 @@
             base_price: `$${Number(base_price).toLocaleString()}`,
             final_price: `$${Number(final_price).toLocaleString()}`,
             selections: selectionsText,
-            page_url: pageURL,
+            page_url: pageURL
           };
 
           await emailjs.send(SERVICE_ID, OWNER_TEMPLATE_ID, ownerParams);
@@ -384,6 +419,7 @@
     });
   </script>
 
+  <!-- Dynamic product data + options -->
   <script src="assets/js/productInfo.js"></script>
   <script src="assets/js/galleryLightbox.js" defer></script>
 </body>

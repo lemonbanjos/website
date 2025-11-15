@@ -1,36 +1,65 @@
 // =======================================================
 //  Lemon Banjo Product Info (Google Sheets Driven)
-//  - Canonicalized group names (fixes invisible/Unicode/spacing mismatches)
-//  - Honors is_default for provider + dependent groups
-//  - Robust dependency handling & auto-heal on changes
+//  - Uses ?key=LEGACY35-LB-3 from URL
+//  - Builds options with dependencies + defaults
+//  - Re-calculates price on changes
 //  - Exposes window.LemonBanjo.getConfig() for EmailJS
 // =======================================================
 
 const SHEET_ID = '1JaKOJLDKDgEvIg54UKKg2J3fftwOsZlKBw1j5qjeheU';
+
 const GVIZ = (sheet, tq) =>
   'https://corsproxy.io/?' +
   'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?' +
   new URLSearchParams({ sheet, tq }).toString();
 
-const MODEL = document.body.dataset.model || 'L3-00';
-const fmtUSD = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
+// ---------- KEY / MODEL ----------
+
+function getModelKey() {
+  const params = new URLSearchParams(window.location.search);
+  const fromUrl = params.get('key');
+  if (fromUrl && String(fromUrl).trim()) {
+    return String(fromUrl).trim().toUpperCase();
+  }
+
+  const fromData = document.body?.dataset?.model;
+  if (fromData && String(fromData).trim()) {
+    return String(fromData).trim().toUpperCase();
+  }
+
+  console.warn('No ?key=… found; falling back to LEGACY35-LB-00');
+  return 'LEGACY35-LB-00';
+}
+
+const MODEL = getModelKey();
+const fmtUSD = n =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
+    .format(Number(n) || 0);
 
 // ---------- GLOBAL STATE ----------
+
 const LemonState = {
-  model: MODEL,
-  product: null,
-  optionsByCanon: null,
-  groupNameMap: null,
-  specs: null,
-  selected: new Map(),
+  model: MODEL,          // e.g. "LEGACY35-LB-3"
+  product: null,         // { model_id, title, series, base_price }
+  optionsByCanon: null,  // { groupCanon: [option, ...] }
+  groupNameMap: null,    // { groupCanon: "Display Name" }
+  specs: null,           // { section: [{ label, value, sort }, ...] }
+  selected: new Map(),   // Map<groupCanon, option_name>
   total: 0
 };
 
 // ---------- HELPERS ----------
+
 const rows = t => (t?.rows || []).map(r => (r.c || []).map(c => c?.v ?? null));
-const cleanStr = v => (v == null ? '' : String(v).replace(/\u00a0/g, ' ').trim());
+const cleanStr = v =>
+  (v == null ? '' : String(v).replace(/\u00a0/g, ' ').trim());
 const lc = v => cleanStr(v).toLowerCase();
-const canon = s => cleanStr(s).normalize('NFKC').replace(/[^0-9A-Za-z]+/g, ' ').trim().toLowerCase();
+const canon = s =>
+  cleanStr(s)
+    .normalize('NFKC')
+    .replace(/[^0-9A-Za-z]+/g, ' ')
+    .trim()
+    .toLowerCase();
 
 async function gvizQuery(sheet, tq) {
   const res = await fetch(GVIZ(sheet, tq), { cache: 'no-store' });
@@ -52,82 +81,180 @@ function calcPrice(base, selected, optionsByCanon) {
     const list = optionsByCanon[canonGroup] || [];
     const item = list.find(o => o.option_name === optionName);
     if (!item) continue;
-    if (item.price_type === 'add') total += item.price_delta;
-    else if (item.price_type === 'pct') total += base * (item.price_delta / 100);
-    else if (item.price_type === 'abs') total += item.price_delta;
+
+    if (item.price_type === 'add') {
+      total += item.price_delta;
+    } else if (item.price_type === 'pct') {
+      total += base * (item.price_delta / 100);
+    } else if (item.price_type === 'abs') {
+      total += item.price_delta;
+    }
   }
   return total;
 }
 
 function chooseDefault(validList, currentName) {
   if (!validList.length) return null;
-  if (currentName && validList.some(o => o.option_name === currentName)) return currentName;
+  if (currentName && validList.some(o => o.option_name === currentName)) {
+    return currentName;
+  }
   const def = validList.find(o => o.is_default);
-  return (def ? def.option_name : validList[0].option_name);
+  return def ? def.option_name : validList[0].option_name;
 }
 
-// ---------- LOAD DATA ----------
-async function loadData(model) {
+// ---------- LOAD DATA FROM SHEET ----------
+//
+// Products sheet:
+//   A: key          (e.g. "LEGACY35-LB-3")
+//   B: title        (e.g. "LB-3")
+//   C: Series Label (e.g. "Legacy ’35 Series")
+//   D: base_price
+//
+// Options sheet (your current layout):
+//   A: model_id
+//   B: group
+//   C: option_name
+//   D: price_delta
+//   E: price_type
+//   F: is_default
+//   G: sort
+//   H: visible
+//   I: dep_group
+//   J: dep_value
+//
+// Specs sheet:
+//   A: model_id
+//   B: section
+//   C: label
+//   D: value
+//   E: sort
+// ---------------------------------------------------
+
+async function loadData(modelKey) {
+  const key = modelKey || MODEL;
+
   const [prodT, optT, specT] = await Promise.all([
-    gvizQuery('Products', `select A,B,C,D where A='${model}'`),
-    gvizQuery('Options',  `select B,C,D,E,F,G,H,I,J where A='${model}' order by B asc, G asc`),
-    gvizQuery('Specs',    `select B,C,D,E where A='${model}' order by B asc, E asc`)
+    gvizQuery('Products', `select A,B,C,D where A='${key}'`),
+    gvizQuery('Options',  `select B,C,D,E,F,G,H,I,J where A='${key}' order by B asc, G asc`),
+    gvizQuery('Specs',    `select B,C,D,E where A='${key}' order by B asc, E asc`)
   ]);
 
-  const [model_id, title, series, base_price] = rows(prodT)[0] || [];
-  const product = { model_id, title, series, base_price: +base_price || 0 };
+  // ---------- Product ----------
+  const [pKey, pTitle, pSeries, pBase] = rows(prodT)[0] || [];
+  if (!pKey) {
+    console.error('No product row found for key', key);
+    throw new Error('Product not found');
+  }
 
+  const product = {
+    model_id: pKey,
+    title: cleanStr(pTitle || pKey),
+    series: cleanStr(pSeries),          // already "Legacy ’35 Series"
+    base_price: Number(pBase || 0)
+  };
+
+  // ---------- Options ----------
   const optionsByCanon = {};
   const groupNameMap = {};
-  rows(optT).forEach(([group, option_name, price_delta, price_type, is_default, sort, visible, dep_group, dep_value]) => {
-    const groupOrig = cleanStr(group);
+
+  rows(optT).forEach(row => {
+    const [
+      groupName,
+      optName,
+      priceDelta,
+      priceType,
+      isDefault,
+      sort,
+      visible,
+      depGroup,
+      depValue
+    ] = row;
+
+    const groupOrig = cleanStr(groupName);
+    if (!groupOrig) return;
+
     const groupCanon = canon(groupOrig);
-    const dep_groupCanon = canon(dep_group || '');
+    const optNameClean = cleanStr(optName);
+    if (!optNameClean) return;
+
+    const price_type  = cleanStr(priceType).toLowerCase();  // "add","pct","abs"
+    const price_delta = Number(priceDelta || 0);
+    const isDefBool   = (String(isDefault).toLowerCase() === 'true' || isDefault === true);
+    const sortNum     = Number(sort || 0);
+    const visibleBool = (String(visible).toLowerCase() === 'true' || visible === true);
+    const depGroupCanon = depGroup ? canon(depGroup) : null;
+    const depValClean   = depValue ? cleanStr(depValue) : null;
+
     if (!optionsByCanon[groupCanon]) optionsByCanon[groupCanon] = [];
-    if (!groupNameMap[groupCanon]) groupNameMap[groupCanon] = groupOrig;
+    if (!groupNameMap[groupCanon])   groupNameMap[groupCanon] = groupOrig;
 
     optionsByCanon[groupCanon].push({
-      groupOrig,
       groupCanon,
-      option_name: cleanStr(option_name),
-      price_delta: +price_delta || 0,
-      price_type: (price_type || 'add'),
-      is_default: String(is_default).toLowerCase() === 'true',
-      sort: +sort || 0,
-      visible: String(visible).toLowerCase() !== 'false',
-      dep_group: cleanStr(dep_group || ''),
-      dep_groupCanon,
-      dep_value: cleanStr(dep_value || '')
+      groupName: groupOrig,
+      option_name: optNameClean,
+      price_type,
+      price_delta,
+      visible: visibleBool,
+      sort: sortNum,
+      dep_groupCanon: depGroupCanon,
+      dep_value: depValClean,
+      is_default: isDefBool
     });
   });
 
+  // ---------- Specs ----------
   const specs = {};
-  rows(specT).forEach(([section, label, value, sort]) => {
+  rows(specT).forEach(row => {
+    const [section, label, value, sort] = row;
     const sec = cleanStr(section);
     const lab = cleanStr(label);
     const val = cleanStr(value);
+    const sortNum = Number(sort || 0);
     if (!sec || !lab || !val) return;
+
     if (!specs[sec]) specs[sec] = [];
-    specs[sec].push({ label: lab, value: val, sort: +sort || 0 });
+    specs[sec].push({ label: lab, value: val, sort: sortNum });
   });
 
-  LemonState.product = product;
+  // ---------- Save to state ----------
+  LemonState.product       = product;
   LemonState.optionsByCanon = optionsByCanon;
-  LemonState.groupNameMap = groupNameMap;
-  LemonState.specs = specs;
+  LemonState.groupNameMap   = groupNameMap;
+  LemonState.specs          = specs;
+  LemonState.selected       = LemonState.selected || new Map();
+  LemonState.total          = product.base_price;
+
+  // Push into LemonBanjo config for EmailJS
+  if (window.LemonBanjo && typeof window.LemonBanjo.setConfig === 'function') {
+    window.LemonBanjo.setConfig({
+      id: product.model_id,
+      series: product.series,
+      model: product.title,
+      base_price: product.base_price,
+      final_price: product.base_price
+    });
+  }
+
   return { product, optionsByCanon, groupNameMap, specs };
 }
 
 // ---------- RENDER ----------
+
 function renderHeader(p) {
   const series = cleanStr(p.series);
   const model  = cleanStr(p.title || p.model_id || '');
 
   const seriesEl = document.getElementById('seriesText');
-  if (seriesEl) seriesEl.textContent = series ? `Lemon Banjos — ${series}` : 'Lemon Banjos';
+  if (seriesEl) {
+    seriesEl.textContent = series
+      ? `Lemon Banjos — ${series}`
+      : 'Lemon Banjos';
+  }
 
   const titleEl = document.getElementById('productTitle');
-  if (titleEl) titleEl.textContent = model;
+  if (titleEl && model) {
+    titleEl.textContent = model;
+  }
 
   const priceEl = document.getElementById('productPrice');
   if (priceEl) {
@@ -135,14 +262,24 @@ function renderHeader(p) {
     priceEl.dataset.base = p.base_price;
   }
 
-  document.title = series ? `Lemon “${series}” ${model}` : `Lemon ${model}`;
+  if (model) {
+    document.title = series
+      ? `Lemon “${series}” ${model}`
+      : `Lemon ${model}`;
+  }
 }
 
 function renderOptions(optionsByCanon, groupNameMap) {
   const host = document.getElementById('productOptions');
+  if (!host) return;
+
   const selected = LemonState.selected = LemonState.selected || new Map();
 
-  const entries = Object.entries(optionsByCanon).map(([gCanon, list]) => [gCanon, [...list].sort((a,b)=>a.sort-b.sort)]);
+  const entries = Object.entries(optionsByCanon).map(([gCanon, list]) => [
+    gCanon,
+    [...list].sort((a, b) => a.sort - b.sort)
+  ]);
+
   const isDependent = ([, list]) => list.some(o => o.dep_groupCanon);
   const providers  = entries.filter(e => !isDependent(e));
   const dependents = entries.filter(e =>  isDependent(e));
@@ -197,7 +334,9 @@ function renderOptions(optionsByCanon, groupNameMap) {
         const el = document.createElement('option');
         el.value = o.option_name;
         const bump = o.price_delta
-          ? (o.price_type === 'pct' ? ` (+${o.price_delta}%)` : ` (+${fmtUSD(o.price_delta)})`)
+          ? (o.price_type === 'pct'
+              ? ` (+${o.price_delta}%)`
+              : ` (+${fmtUSD(o.price_delta)})`)
           : '';
         el.textContent = o.option_name + bump;
         el.selected = (o.option_name === current);
@@ -220,6 +359,10 @@ function renderOptions(optionsByCanon, groupNameMap) {
     const priceEl = document.getElementById('productPrice');
     if (priceEl) priceEl.textContent = fmtUSD(total);
     LemonState.total = total;
+
+    if (window.LemonBanjo && typeof window.LemonBanjo.setConfig === 'function') {
+      window.LemonBanjo.setConfig({ final_price: total });
+    }
   }
 
   draw();
@@ -228,11 +371,13 @@ function renderOptions(optionsByCanon, groupNameMap) {
 function renderSpecs(specs) {
   const grid = document.getElementById('specsGrid');
   if (!grid) return;
+
   grid.innerHTML = '';
   Object.entries(specs).forEach(([section, arr]) => {
     arr.sort((a, b) => a.sort - b.sort);
-    const rowsClean = arr.map(r => ({ label: cleanStr(r.label), value: cleanStr(r.value) }))
-                         .filter(r => r.label && r.value);
+    const rowsClean = arr
+      .map(r => ({ label: cleanStr(r.label), value: cleanStr(r.value) }))
+      .filter(r => r.label && r.value);
     if (!rowsClean.length) return;
 
     const card = document.createElement('article');
@@ -247,40 +392,46 @@ function renderSpecs(specs) {
 }
 
 // ---------- INIT ----------
-(async function init() {
-  try {
-    const { product, optionsByCanon, groupNameMap, specs } = await loadData(MODEL);
-    renderHeader(product);
-    renderOptions(optionsByCanon, groupNameMap);
-    renderSpecs(specs);
-  } catch (err) {
-    console.error(err);
-    const priceEl = document.getElementById('productPrice');
-    if (priceEl) priceEl.textContent = 'Price unavailable';
-  }
-})();
 
-/* =======================================================
- * EmailJS Bridge
- * ======================================================= */
+document.addEventListener('DOMContentLoaded', () => {
+  loadData(MODEL)
+    .then(({ product, optionsByCanon, groupNameMap, specs }) => {
+      renderHeader(product);
+      renderOptions(optionsByCanon, groupNameMap);
+      renderSpecs(specs);
+    })
+    .catch(err => {
+      console.error(err);
+      const priceEl = document.getElementById('productPrice');
+      if (priceEl) priceEl.textContent = 'Price unavailable';
+    });
+});
+
+// ---------- EMAILJS BRIDGE ----------
+
 window.LemonBanjo = window.LemonBanjo || {};
 window.LemonBanjo.getConfig = function () {
   const p = LemonState.product || {};
   const base_price = Number(p.base_price || 0);
   const final_price = Number(LemonState.total || base_price);
-  const series = p.series || (document.getElementById('seriesText')?.textContent || '').replace(/^Lemon Banjos —\s*/,'') || '';
-  const model  = p.title || p.model_id || '';
+
+  const seriesText = (document.getElementById('seriesText')?.textContent || '');
+  const series = p.series || seriesText.replace(/^Lemon Banjos —\s*/, '') || '';
+
+  const modelTitle = p.title || p.model_id || '';
 
   const selections = {};
   (LemonState.selected || new Map()).forEach((val, canonKey) => {
-    const displayGroup = (LemonState.groupNameMap && LemonState.groupNameMap[canonKey]) || canonKey;
+    const displayGroup =
+      (LemonState.groupNameMap && LemonState.groupNameMap[canonKey]) || canonKey;
     selections[displayGroup] = val;
   });
 
   return {
+    id: p.model_id || MODEL,
     model: p.model_id || '',
+    title: modelTitle,
     series,
-    title: model,
     base_price,
     final_price,
     selections

@@ -7,7 +7,7 @@
   --white:#fff;
   --heading-font:'Georgia','Times New Roman',serif;
   --body-font:'system-ui',-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  --max-width:1100px;
+  --max-width:960px;
   --overlay-pad:clamp(16px,2vh,32px);
 }
 
@@ -502,7 +502,8 @@ body.modal-open{
   display: grid;
   gap: 1.5rem;
   justify-content: center;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  /* fixed card width so all rows match */
+  grid-template-columns: repeat(auto-fit, 160px);
   margin-bottom: 28px;
 }
 
@@ -546,15 +547,19 @@ body.modal-open{
   }
 }
 
-.card-img{
-  aspect-ratio: 2/5;
-  object-fit:cover;
-  background:#ddd;
-  display:block;
+.card-img {
+  aspect-ratio: 2/5;      /* lock card shape */
+  object-fit: cover;      /* crop to fill without distortion */
+  object-position: top;   /* keep headstock visible */
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #ddd;       /* optional, shows only if image fails */
 }
 
 .card-body{
   padding:16px;
+  max-height: 350px;
   text-align:center;
 }
 
@@ -754,4 +759,9 @@ body.modal-open{
 .hero-subtitle {
   font-size: clamp(1.1rem, 3vw, 1.5rem);
   font-weight: 400;
+}
+
+/* Make card grids wider ONLY on the homepage */
+.home-page .card-grid {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 }

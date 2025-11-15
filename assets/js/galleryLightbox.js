@@ -18,7 +18,8 @@
   function toLightboxURL(url){
     if (!url) return '';
     if (url.includes('/lightbox/')) return url;
-    return url.replace(/(\/product_images\/[^/]+)\/(?:thumbnails\/)?/, '$1/lightbox/');
+    return url.replace(/(\/product_images\/[^/]+\/[^/]+)\/(?:thumbnails\/)?/,
+    '$1/lightbox/');
   }
 
   // Common selectors
