@@ -18,6 +18,7 @@
 html,body{
   margin:0;
   padding:0;
+  height: 100%;
 }
 
 img{
@@ -30,6 +31,13 @@ body{
   color:var(--text);
   line-height:1.6;
   background:#fff;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+#footer, .site-footer {
+  margin-top: auto; /* pushes footer to bottom */
 }
 
 .container{
