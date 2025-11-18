@@ -13,22 +13,22 @@
   <section class="section">
     <div class="container narrow">
       <h1 class="section-title">About Lemon Banjos</h1>
-      <p style="text-align:center;">
+      <p class="text-center">
         I'm Hunter Lemon — the builder, designer, and one-man shop behind Lemon Banjos. I started experimenting with banjo construction as a junior in high school, slowly learning the craft one attempt at a time. My first successful build was completed in May 2020, about a week after my high school graduation.
       </p>
-      <p style="text-align:center;">
+      <p class="text-center">
         Things began moving quickly. A close friend asked me to build a custom banjo inspired by a 1954 RB-250, another asked for a conversion rim, and before long I was building instruments for players across the country — all while beginning my first semesters of college.
       </p>
-      <p style="text-align:center;">
+      <p class="text-center">
         Today, I continue building banjos while pursuing degrees in Computer & Information Systems and Land Surveying. No matter where I end up, banjo building is something I plan to continue for years to come.
       </p>
-      <p style="text-align:center;">
+      <p class="text-center">
         Lemon Banjos grew quickly because of a simple idea I’m passionate about: lightweight, no-tone-ring banjos that don’t sacrifice tone, volume, or character. My instruments are built with this philosophy in mind — classic feel, modern reliability, and meticulous attention to detail from the first cut to the final setup.
       </p>
-	  <p style="text-align:center;">
+      <p class="text-center">
         My goal is simple: to build banjos that feel alive in your hands, inspire you to play more often, and serve you for decades. I now focus exclusively on crafting complete instruments, each one built from the ground up with care, precision, and intention.
       </p>
-	  <p style="text-align:center;">
+      <p class="text-center">
         A Lemon has never been sweeter!
       </p>
     </div>
@@ -37,14 +37,28 @@
   <div id="footer"></div>
 
   <script>
-    Promise.all([
-      fetch('header.html').then(r => r.text()).then(h => {
-        document.getElementById('header').innerHTML = h;
-      }),
-      fetch('footer.html').then(r => r.text()).then(f => {
-        document.getElementById('footer').innerHTML = f;
-      })
-    ]).catch(console.error);
-  </script>
+	  function initHeaderFooter() {
+		return Promise.all([
+		  fetch('header.html').then(r => r.text()).then(h => {
+			document.getElementById('header').innerHTML = h;
+		  }),
+		  fetch('footer.html').then(r => r.text()).then(f => {
+			document.getElementById('footer').innerHTML = f;
+		  })
+		]).then(() => {
+		  // this runs AFTER header/footer are in the DOM
+		  const toggle = document.getElementById('menu-toggle');
+		  const nav = document.getElementById('main-nav');
+		  if (toggle && nav) {
+			toggle.addEventListener('click', () => {
+			  const isOpen = nav.classList.toggle('open');
+			  toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+			});
+		  }
+		});
+	  }
+
+	  initHeaderFooter().catch(console.error);
+	</script>
 </body>
 </html>

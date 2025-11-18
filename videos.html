@@ -6,56 +6,6 @@
   <title>Hear Lemon Banjos</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" type="image/png" href="assets/favicon.png">
-  <style>
-    /* Video grid */
-    .video-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr); /* 3-wide on desktop */
-      gap: 24px;
-      margin-top: 32px;
-    }
-
-    /* Drop to 2-wide on medium screens */
-    @media (max-width: 900px) {
-      .video-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    /* Single column on small screens */
-    @media (max-width: 600px) {
-      .video-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .video-item {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .video-grid iframe {
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      border: none;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,.08);
-      background: #000;
-    }
-
-    .video-title {
-      text-align: center;
-      font-size: 1rem;
-      font-weight: 600;
-      font-family: var(--heading-font);
-      color: var(--green-dark);
-      height: 4.8em;          /* fixed title height so iframes align */
-      display: flex;
-      align-items: flex-end;  /* keep text at bottom of that space */
-      justify-content: center;
-    }
-  </style>
 </head>
 
 <body>
@@ -65,7 +15,7 @@
     <!-- use full-width container instead of "narrow" -->
     <div class="container">
       <h1 class="section-title">Hear Lemon Banjos</h1>
-      <p style="text-align:center;">
+      <p class="text-center">
         Here are a few recordings and demos featuring Lemon Banjos — from old-time to bluegrass.
       </p>
 
@@ -158,14 +108,28 @@
   <div id="footer"></div>
 
   <script>
-    Promise.all([
-      fetch('header.html').then(r => r.text()).then(h => {
-        document.getElementById('header').innerHTML = h;
-      }),
-      fetch('footer.html').then(r => r.text()).then(f => {
-        document.getElementById('footer').innerHTML = f;
-      })
-    ]).catch(console.error);
-  </script>
+	  function initHeaderFooter() {
+		return Promise.all([
+		  fetch('header.html').then(r => r.text()).then(h => {
+			document.getElementById('header').innerHTML = h;
+		  }),
+		  fetch('footer.html').then(r => r.text()).then(f => {
+			document.getElementById('footer').innerHTML = f;
+		  })
+		]).then(() => {
+		  // this runs AFTER header/footer are in the DOM
+		  const toggle = document.getElementById('menu-toggle');
+		  const nav = document.getElementById('main-nav');
+		  if (toggle && nav) {
+			toggle.addEventListener('click', () => {
+			  const isOpen = nav.classList.toggle('open');
+			  toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+			});
+		  }
+		});
+	  }
+
+	  initHeaderFooter().catch(console.error);
+	</script>
 </body>
 </html>
