@@ -21,53 +21,6 @@
       getConfig() { return this._cfg; }
     };
   </script>
-
-  <style>
-    /* Email modal styles */
-    .lb-modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.55);
-      display: none; align-items: center; justify-content: center; z-index: 1000;
-    }
-    .lb-modal {
-      background: #111; color: #eee; max-width: 520px; width: 92%;
-      border-radius: 12px; padding: 18px; box-shadow: 0 10px 35px rgba(0,0,0,0.5);
-    }
-    .lb-modal h3 { margin: 0 0 10px; font-size: 1.25rem; }
-    .lb-modal form { display:grid; gap: 10px; }
-    .lb-row { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
-    .lb-modal label { font-size: 0.9rem; display:block; margin-bottom: 4px; }
-    .lb-modal input {
-      width: 100%; padding: 10px; border-radius: 8px;
-      border: 1px solid #333; background: #1a1a1a; color: #f5f5f5;
-    }
-    .lb-actions { display:flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
-    .lb-btn { padding: 10px 14px; border: 1px solid #3a3a3a;
-      border-radius: 8px; background:#222; color:#eee; cursor:pointer; }
-    .lb-btn.primary { background: #1e7a1e; border-color:#1e7a1e; }
-    .lb-note { font-size: 0.85rem; color:#aaa; }
-    .lb-hidden { display:none; }
-
-    #emailStatus { margin-top: 4px; }
-    .lb-status { display:flex; align-items:center; gap:8px; }
-    .lb-status .spinner {
-      width:16px; height:16px; border-radius:50%;
-      border:2px solid #777; border-top-color:#fff;
-      animation: lb-spin 0.9s linear infinite;
-    }
-    .lb-status.success { color:#9BE59B; }
-    .lb-status.error { color:#ffb3b3; }
-    .lb-status .check {
-      width:16px; height:16px; display:inline-block;
-      border-radius:50%; background:#2a7a2a; position:relative;
-    }
-    .lb-status .check::after {
-      content:""; position:absolute; left:4px; top:2px;
-      width:6px; height:10px; border-right:2px solid #fff;
-      border-bottom:2px solid #fff; transform:rotate(45deg);
-    }
-    @keyframes lb-spin { to { transform: rotate(360deg); } }
-    .lb-disabled { opacity:0.6; pointer-events:none; }
-  </style>
 </head>
 
 <body>
@@ -76,6 +29,7 @@
   <section class="product">
     <div class="container">
       <div class="product-grid">
+        <!-- GALLERY: main image + thumbs -->
         <div class="product-gallery">
           <div class="thumb-rail" role="list">
             <img data-role="thumb-front"     alt="Front view"       class="thumbnail active" role="listitem" tabindex="0">
@@ -93,13 +47,21 @@
           </div>
         </div>
 
-        <div class="product-details">
+        <!-- Series + title (right column on desktop, top on mobile) -->
+        <div class="product-header-block">
           <p id="seriesText">Lemon Banjos</p>
           <h1 class="product-title" id="productTitle">Loading…</h1>
-          <h2><em id="productPrice" aria-live="polite">Loading…</em></h2>
+        </div>
 
+        <!-- Price: right column under header on desktop, below gallery on mobile -->
+        <div class="product-price-block">
+          <h2><em id="productPrice" aria-live="polite">Loading…</em></h2>
+        </div>
+
+        <!-- Remaining details: options, button, description -->
+        <div class="product-details">
           <div id="productOptions" aria-describedby="optionsHelp"></div>
-          <p id="optionsHelp" class="small" style="margin-top:-8px">
+          <p id="optionsHelp" class="small mt-neg-8">
             Choose configuration to see updated price.
           </p>
 
@@ -181,10 +143,28 @@
 
   <!-- Load header/footer -->
   <script>
-    Promise.all([
-      fetch('header.html').then(r => r.text()).then(h => { document.getElementById('header').innerHTML = h; }),
-      fetch('footer.html').then(r => r.text()).then(f => { document.getElementById('footer').innerHTML = f; })
-    ]).catch(console.error);
+    function initHeaderFooter() {
+      return Promise.all([
+        fetch('header.html').then(r => r.text()).then(h => {
+          document.getElementById('header').innerHTML = h;
+        }),
+        fetch('footer.html').then(r => r.text()).then(f => {
+          document.getElementById('footer').innerHTML = f;
+        })
+      ]).then(() => {
+        // this runs AFTER header/footer are in the DOM
+        const toggle = document.getElementById('menu-toggle');
+        const nav = document.getElementById('main-nav');
+        if (toggle && nav) {
+          toggle.addEventListener('click', () => {
+            const isOpen = nav.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+          });
+        }
+      });
+    }
+
+    initHeaderFooter().catch(console.error);
   </script>
 
   <!-- Routing + image paths from ?key=LEGACY35-LB-00 -->
@@ -197,27 +177,26 @@
     }
 
     function deriveImageInfo(key) {
-  const upper = String(key || '').toUpperCase();
-  const parts = upper.split('-');          // ["LEGACY35", "LB", "00"]
-  const seriesKey = parts[0] || '';        // "LEGACY35"
-  const modelCode = parts.slice(1).join('-') || upper; // "LB-00"
-  const modelSlug = modelCode.toLowerCase();           // "lb-00"
+      const upper = String(key || '').toUpperCase();
+      const parts = upper.split('-');          // ["LEGACY35", "LB", "00"]
+      const seriesKey = parts[0] || '';        // "LEGACY35"
+      const modelCode = parts.slice(1).join('-') || upper; // "LB-00"
+      const modelSlug = modelCode.toLowerCase();           // "lb-00"
 
-  let folder = '35';   // sensible default so something loads
+      let folder = '35';   // sensible default so something loads
 
-  if (seriesKey.startsWith('LEGACY')) {
-    // Take the numeric part after "LEGACY", e.g. "35", "54", "27", "60"
-    const num = seriesKey.replace('LEGACY', '').trim();  // "35"
-    folder = num || '35';    // e.g. "35" → assets/product_images/35/...
-  } else if (seriesKey.startsWith('OLDTIME')) {
-    folder = 'oldtime';
-  } else if (seriesKey.startsWith('MASTER')) {
-    folder = 'master';
-  }
+      if (seriesKey.startsWith('LEGACY')) {
+        // Take the numeric part after "LEGACY", e.g. "35", "54", "27", "60"
+        const num = seriesKey.replace('LEGACY', '').trim();  // "35"
+        folder = num || '35';    // e.g. "35" → assets/product_images/35/...
+      } else if (seriesKey.startsWith('OLDTIME')) {
+        folder = 'oldtime';
+      } else if (seriesKey.startsWith('MASTER')) {
+        folder = 'master';
+      }
 
-  return { folder, modelCode, modelSlug };
-}
-
+      return { folder, modelCode, modelSlug };
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
       const key = getProductKeyFromUrl() || 'LEGACY35-LB-00';
@@ -227,13 +206,12 @@
 
       const { folder, modelCode, modelSlug } = deriveImageInfo(key);
 
-// Just set a generic placeholder here;
-// productInfo.js will replace it with the real "Legacy ’35 Series" from the sheet.
-const seriesEl = document.getElementById('seriesText');
-if (seriesEl) {
-  seriesEl.textContent = 'Lemon Banjos';
-}
-
+      // Just set a generic placeholder here;
+      // productInfo.js will replace it with the real "Legacy ’35 Series" from the sheet.
+      const seriesEl = document.getElementById('seriesText');
+      if (seriesEl) {
+        seriesEl.textContent = 'Lemon Banjos';
+      }
 
       const base = `assets/product_images/${folder}/${modelSlug}/`;
 
@@ -263,10 +241,10 @@ if (seriesEl) {
       // Seed minimal config for EmailJS in case someone clicks quickly
       if (window.LemonBanjo && typeof window.LemonBanjo.setConfig === 'function') {
         window.LemonBanjo.setConfig({
-  id: key,
-  series: '',          // productInfo.js will fill this in from the sheet
-  model: modelCode
-});
+          id: key,
+          series: '',          // productInfo.js will fill this in from the sheet
+          model: modelCode
+        });
       }
     });
   </script>
