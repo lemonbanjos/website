@@ -916,24 +916,32 @@ body.modal-open{
 
 }
 
+/* 🔥 UPDATED MOBILE NAV: smooth hamburger menu */
 @media (max-width:768px) {
-.hamburger{
-  display:block;
-}
+  .hamburger{
+    display:block;
+  }
 
-.nav-centered{
-  flex-direction:column;
-  gap:18px;
-  max-height:0;
-  overflow:hidden;
-  padding:0;
-}
+  .nav-centered{
+    flex-direction:column;
+    gap:18px;
+    margin-top:10px;
+    /* smooth open/close */
+    transform-origin: top;
+    transform: scaleY(0);
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+    padding:0;
+    transition: transform .28s ease, opacity .22s ease;
+  }
 
-.nav-centered.open{
-  max-height:320px;
-  padding:12px 0;
-}
-
+  .nav-centered.open{
+    transform: scaleY(1);
+    opacity: 1;
+    height:auto;
+    padding:12px 0;
+  }
 }
 
 @media (max-width:560px) {
@@ -1071,4 +1079,19 @@ body.modal-open{
     right: 12px;     /* was 8px — move right */
     z-index: 999999; /* ensure it's above image */
   }
+}
+
+.loading-message {
+  text-align: center;
+  padding: 2rem 0;
+  color: #777;
+  font-size: 1.1rem;
+  font-style: italic;
+}
+
+.card-series {
+  font-size: 0.9rem;
+  font-style: italic;
+  color: #777;
+  margin-bottom: 0.25rem;
 }

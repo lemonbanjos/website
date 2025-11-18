@@ -19,22 +19,18 @@
     </div>
   </section>
 
-  <section class="section">
-    <div class="container">
-      <div class="card-grid">
-        <!-- Bear Fork -->
-        <a href="banjo.html?key=MASTER-BEARFORK" class="card-link-wrapper" aria-label="View Bear Fork">
-          <article class="card" data-model-key="MASTER-BEARFORK">
-            <img loading="lazy" src="assets/product_images/master/bearfork/front.webp" alt="Bear Fork banjo" class="card-img">
-            <div class="card-body">
-              <h3 class="card-title">Bear Fork</h3>
-              <p class="card-price"></p>
-            </div>
-          </article>
-        </a>
-      </div>
-    </div>
-  </section>
+<section class="section">
+  <div class="container">
+    <!-- NOTE: no hard-coded cards here either -->
+    <div
+      class="card-grid"
+      data-series-prefix="MASTER"
+      data-image-root="assets/product_images/master">
+	  <div class="loading-message">Tuning banjos...</div>
+	  </div>
+  </div>
+</section>
+
 
   <div id="footer"></div>
 
@@ -119,5 +115,9 @@
 
 	  initHeaderFooter().catch(console.error);
 	</script>
+<script src="assets/js/seriesCards.js"></script>
+<script>
+  initHeaderFooter().catch(console.error);
+</script>
 </body>
 </html>

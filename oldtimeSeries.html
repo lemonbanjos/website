@@ -20,21 +20,16 @@
   </section>
 
   <section class="section">
-    <div class="container">
-      <div class="card-grid">
-        <!-- OT-1 -->
-        <a href="banjo.html?key=OLDTIME-OT-1" class="card-link-wrapper" aria-label="View Bear Fork">
-          <article class="card" data-model-key="OLDTIME-OT-1">
-            <img loading="lazy" src="assets/product_images/oldtime/ot-1/front.webp" alt="OT-1 banjo" class="card-img">
-            <div class="card-body">
-              <h3 class="card-title">OT-1</h3>
-              <p class="card-price"></p>
-            </div>
-          </article>
-        </a>
-      </div>
-    </div>
-  </section>
+  <div class="container">
+    <!-- NOTE: no hard-coded cards here either -->
+    <div
+      class="card-grid"
+      data-series-prefix="OLDTIME"
+      data-image-root="assets/product_images/oldtime">
+	  <div class="loading-message">Tuning banjos...</div>
+   </div>
+  </div>
+</section>
 
   <div id="footer"></div>
 
@@ -119,5 +114,9 @@
 
 	  initHeaderFooter().catch(console.error);
 	</script>
+<script src="assets/js/seriesCards.js"></script>
+<script>
+  initHeaderFooter().catch(console.error);
+</script>
 </body>
 </html>
