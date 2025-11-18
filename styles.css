@@ -284,11 +284,18 @@ body{
 }
 
 .main-image-wrapper{
+  grid-area:main;
   border-radius:8px;
   overflow:hidden;
   border:1px solid #ddd;
   background:#f8f8f8;
+
+  /* NEW: true centering */
+  display:flex;
+  justify-content:center;
+  align-items:center;
 }
+
 
 .main-image{
   width:100%;
@@ -298,6 +305,10 @@ body{
   object-fit:contain;
   transition:transform .25s ease;
   cursor:zoom-in;
+  
+  /* NEW: play nice with flex centering */
+  margin:0 auto;
+  display:block;
 }
 
 .thumb-rail{
