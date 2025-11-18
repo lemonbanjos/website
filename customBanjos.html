@@ -13,11 +13,11 @@
   <section class="section">
     <div class="container narrow">
       <h1 class="section-title">Custom Lemon Banjos</h1>
-      <p style="text-align:center;">
+      <p class="text-center">
         At this time, the Custom Banjo Builder Tool is not complete. However, if you would like to discuss a custom build, please do not hesitate to contact me at the info below!<br>
-		Hunter Lemon<br>
-		Email: hunter@lemonbanjos.com<br>
-		Phone: (304)-266-0476
+        Hunter Lemon<br>
+        Email: hunter@lemonbanjos.com<br>
+        Phone: (304)-266-0476
       </p>
     </div>
   </section>
@@ -25,14 +25,28 @@
   <div id="footer"></div>
 
   <script>
-    Promise.all([
-      fetch('header.html').then(r => r.text()).then(h => {
-        document.getElementById('header').innerHTML = h;
-      }),
-      fetch('footer.html').then(r => r.text()).then(f => {
-        document.getElementById('footer').innerHTML = f;
-      })
-    ]).catch(console.error);
-  </script>
+	  function initHeaderFooter() {
+		return Promise.all([
+		  fetch('header.html').then(r => r.text()).then(h => {
+			document.getElementById('header').innerHTML = h;
+		  }),
+		  fetch('footer.html').then(r => r.text()).then(f => {
+			document.getElementById('footer').innerHTML = f;
+		  })
+		]).then(() => {
+		  // this runs AFTER header/footer are in the DOM
+		  const toggle = document.getElementById('menu-toggle');
+		  const nav = document.getElementById('main-nav');
+		  if (toggle && nav) {
+			toggle.addEventListener('click', () => {
+			  const isOpen = nav.classList.toggle('open');
+			  toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+			});
+		  }
+		});
+	  }
+
+	  initHeaderFooter().catch(console.error);
+	</script>
 </body>
 </html>

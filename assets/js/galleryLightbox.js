@@ -136,9 +136,13 @@
   }
 
   function openLightbox(){
+    // Make sure we’re targeting the real #lightbox/#lightboxImg
+    ensureLightbox();
+
     refreshImages();
     syncIndexFromMain();
     if(!images.length) return;
+
     lightbox.style.display = 'flex';
     document.body.classList.add('modal-open');
     lightboxImg.src = toLightboxURL(images[currentIndex]); // upgraded to /lightbox/
@@ -146,6 +150,7 @@
     lightboxImg.alt = th && th.alt ? th.alt : '';
     resetTransform();
   }
+
 
   function closeLightbox(){
     lightbox.style.display = 'none';
@@ -180,19 +185,70 @@
     }
   }, true);
 
-  // Clicking main image opens lightbox
-  function wireMainImageClick(){
-    if(!mainImage) return;
+  // Main image: tap opens lightbox, swipe left/right changes image
+  function wireMainImageInteractions(){
+    if (!mainImage) {
+      mainImage = $('#mainImage') || $('.main-image img') || $('[data-main-image]');
+    }
+    if (!mainImage) return;
+
     mainImage.style.cursor = 'zoom-in';
-    mainImage.addEventListener('click', (e)=>{
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+    const SWIPE_THRESHOLD = 40; // px
+
+    mainImage.addEventListener('touchstart', (e) => {
+  if (e.touches.length !== 1) return;
+  const t = e.touches[0];
+  touchStartX = t.clientX;
+  touchStartY = t.clientY;
+}, { passive: true });
+
+mainImage.addEventListener('touchend', (e) => {
+  if (!e.changedTouches.length) return;
+  const t = e.changedTouches[0];
+  const dx = t.clientX - touchStartX;
+  const dy = t.clientY - touchStartY;
+
+  const absDx = Math.abs(dx);
+  const absDy = Math.abs(dy);
+
+  // Refresh thumbnail list + image array
+  refreshImages();
+  if (!images.length) return;
+
+  // Horizontal swipe?
+  if (absDx > SWIPE_THRESHOLD && absDx > absDy) {
+    if (dx < 0) {
+      // swipe left → next
+      setMain(currentIndex + 1);
+    } else {
+      // swipe right → previous
+      setMain(currentIndex - 1);
+    }
+  } else {
+    // Not a swipe → treat as tap, open lightbox
+    e.preventDefault();      // ⬅ put this back
+    openLightbox();
+  }
+}, { passive: false });
+
+
+
+    // Mouse click (desktop) still opens the lightbox
+    mainImage.addEventListener('click', (e) => {
       e.preventDefault();
       openLightbox();
     });
   }
-  wireMainImageClick();
-  document.addEventListener('DOMContentLoaded', wireMainImageClick);
+
+  document.addEventListener('DOMContentLoaded', wireMainImageInteractions);
+
 
   // Lightbox controls
+  ensureLightbox(); // make sure close/prev/next are pointing at real elements
+  
   closeBtn && closeBtn.addEventListener('click', (e)=>{ e.preventDefault(); closeLightbox(); });
   nextBtn  && nextBtn.addEventListener('click', (e)=>{ e.preventDefault(); showImage(currentIndex+1); });
   prevBtn  && prevBtn.addEventListener('click', (e)=>{ e.preventDefault(); showImage(currentIndex-1); });
