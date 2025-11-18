@@ -24,7 +24,8 @@
     <div class="container">
       <h2 class="section-title">Standard Banjos</h2>
       <p class="section-tagline">A Lemon has never been sweeter!</p>
-
+<div class="card-scroll" id="homeCards">
+  <button class="card-arrow card-arrow--prev" aria-label="Previous banjo">‹</button>
       <div class="card-grid card-grid--scroll">
         <a class="card-link" href="oldtimeSeries.html">
           <article class="card">
@@ -56,6 +57,8 @@
           </article>
         </a>
       </div>
+	  <button class="card-arrow card-arrow--next" aria-label="Next banjo">›</button>
+</div>
 
       <div class="center">
         <a class="button" href="allBanjos.html">View All Banjos</a>
@@ -89,5 +92,28 @@
 
 	  initHeaderFooter().catch(console.error);
 	</script>
+	<script>
+	document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.card-scroll').forEach(wrapper => {
+    const scroller = wrapper.querySelector('.card-grid--scroll');
+    const prevBtn = wrapper.querySelector('.card-arrow--prev');
+    const nextBtn = wrapper.querySelector('.card-arrow--next');
+
+    if (!scroller || !prevBtn || !nextBtn) return;
+
+    const scrollOneCard = (direction) => {
+      const amount = scroller.clientWidth; // one full viewport width
+      scroller.scrollBy({
+        left: direction * amount,
+        behavior: 'smooth'
+      });
+    };
+	
+
+    prevBtn.addEventListener('click', () => scrollOneCard(-1));
+    nextBtn.addEventListener('click', () => scrollOneCard(1));
+  });
+});
+</script>
 </body>
 </html>

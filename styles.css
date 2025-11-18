@@ -483,7 +483,7 @@ body.modal-open{
 .lightbox .next{
   position:fixed;
   top:50%;
-  right:20px;
+  right:20%;
   transform:translateY(-50%);
 }
 
@@ -916,48 +916,68 @@ body.modal-open{
 
 }
 
-/* 🔥 UPDATED MOBILE NAV: smooth hamburger menu */
+/* 🔥 MOBILE NAV: overlay dropdown that glides over page */
 @media (max-width:768px) {
+
+  /* make header a positioning context */
+  .site-header{
+    position:sticky;
+    top:0;
+    z-index:200;
+  }
+
+  .site-header .container{
+    position:relative;
+  }
+
   .hamburger{
     display:block;
+  }
+
+  /* dropdown overlay */
+  .main-nav{
+    position:absolute;
+    top:100%;          /* directly under header bar */
+    left:0;
+    right:0;
+    background:var(--green);
+    box-shadow:0 8px 20px rgba(0,0,0,.35);
+    z-index:300;
   }
 
   .nav-centered{
     flex-direction:column;
     gap:18px;
-    margin-top:10px;
+    margin-top:0;
     /* smooth open/close */
-    transform-origin: top;
-    transform: scaleY(0);
-    opacity: 0;
-    height: 0;
-    overflow: hidden;
+    transform-origin:top;
+    transform:scaleY(0);
+    opacity:0;
+    overflow:hidden;
     padding:0;
-    transition: transform .28s ease, opacity .22s ease;
+    transition:transform .28s ease, opacity .22s ease;
   }
 
   .nav-centered.open{
-    transform: scaleY(1);
-    opacity: 1;
-    height:auto;
+    transform:scaleY(1);
+    opacity:1;
     padding:12px 0;
+  }
+
+  .main-nav a{
+    margin:6px 0;
   }
 }
 
 @media (max-width:560px) {
-.main-nav{
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-}
 
-.main-nav a{
-  margin:6px 10px 0;
-}
+  .main-nav a{
+    margin:6px 10px 0;  /* a little side margin for tap comfort */
+  }
 
-.card-grid{
-  grid-template-columns:1fr;
-}
+  .card-grid{
+    grid-template-columns:1fr;
+  }
 }
 
 @media (min-width: 1400px) {
@@ -1095,3 +1115,128 @@ body.modal-open{
   color: #777;
   margin-bottom: 0.25rem;
 }
+@media (max-width: 768px) {
+  .logo img {
+    max-height: 68px; /* 75% of 90px ≈ 67.5, rounded */
+  }
+}
+@media (max-width:768px) {
+  .hamburger {
+    position: absolute;
+    top: 16px;      /* adjust if needed */
+    right: 16px;    /* adjust if needed */
+    z-index: 500;   /* above logo */
+  }
+
+  .site-header .container {
+    position: relative;
+  }
+}
+@media (max-width: 768px) {
+  .hero {
+    min-height: 30vh;
+  }
+}
+@media (max-width: 768px) {
+  .card-grid--scroll > a {
+    flex: 0 0 55%;
+    max-width: 55%;
+  }
+}
+
+/* Wrapper so we can position arrows */
+.card-scroll {
+  position: relative;
+  margin-top: 16px;
+}
+
+/* Default: hide arrows on desktop */
+.card-arrow {
+  display: none;
+}
+
+/* MOBILE: horizontal scroll, one card per "page" */
+@media (max-width: 768px) {
+
+  .card-grid--scroll {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    padding: 0 24px;        /* space from edges of screen */
+    gap: 0;                 /* no half card peeking in */
+    scroll-padding: 0 24px;
+  }
+
+  .card-grid--scroll > a {
+    flex: 0 0 100%;         /* viewport-wide “page” */
+    max-width: 100%;
+    scroll-snap-align: center;
+    display: flex;
+    justify-content: center;
+  }
+
+  .card-grid--scroll .card {
+    max-width: 260px;       /* actual card size */
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* Show arrows on mobile + style them */
+  .card-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 10;
+  }
+
+  .card-arrow--prev {
+    left: 8px;
+  }
+
+  .card-arrow--next {
+    right: 8px;
+  }
+
+  .card-arrow:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+
+  /* optional: hide scrollbar chrome on mobile */
+  .card-grid--scroll::-webkit-scrollbar {
+    display: none;
+  }
+}
+@media (max-width: 768px) {
+  .card-grid--scroll .card {
+    max-width: 200px;   /* was 260px */
+    width: 100%;
+    margin: 0 auto;
+  }
+}
+@media (max-width: 768px) {
+  .card-grid--scroll .card-title {
+    font-size: 0.9rem;
+  }
+
+  .card-grid--scroll .card-series {
+    font-size: 0.75rem;
+  }
+
+  .card-grid--scroll .card-body {
+    padding: 12px;
+  }
+}
+
