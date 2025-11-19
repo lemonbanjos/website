@@ -1240,3 +1240,14 @@ body.modal-open{
   }
 }
 
+/* Fix desktop nav squishing */
+@media (min-width: 1024px) {
+  .site-header .container {
+    max-width: 1300px;
+  }
+  .nav-centered {
+    gap: 22px;
+  }
+}
+
+
