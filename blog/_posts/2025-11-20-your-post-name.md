@@ -1,7 +1,7 @@
 ---
 layout: default
 title: "POST TITLE HERE"
-published: true
+published: false
 ---
 
 <section class="section">
