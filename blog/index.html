@@ -16,12 +16,15 @@ title: "Lemon Banjo Blog"
           <h2>
             <a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a>
           </h2>
+
           <p class="blog-meta">
             {{ post.date | date: "%B %-d, %Y" }}
           </p>
-          {% if post.excerpt %}
-            <p>{{ post.excerpt | strip_html }}</p>
-          {% endif %}
+
+          {% assign preview = post.content | strip_html | truncatewords: 60 %}
+          <p>{{ preview }}</p>
+
+          <p><a href="{{ post.url }}">Read More →</a></p>
         </li>
       {% endfor %}
     </ul>

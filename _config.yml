@@ -2,3 +2,4 @@ title: "Lemon Banjos"
 url: "https://lemonbanjos.github.io"
 baseurl: "/website"   # because your main site lives under /website
 permalink: /website/blog/:title/
+excerpt_separator: "<!--more-->"
