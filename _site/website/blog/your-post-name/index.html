@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>
+    POST TITLE HERE • Lemon Banjos
+  </title>
+
+  <!-- Use baseurl so this works from /website, /website/blog, etc. -->
+  <link rel="stylesheet" href="/website/styles.css" />
+  <link rel="icon" type="image/png" href="/website/assets/favicon.png">
+</head>
+<body>
+  <div id="header"></div>
+
+  <!-- Page-specific content gets injected here -->
+  <section class="section">
+  <div class="container narrow">
+
+# POST TITLE HERE
+
+Intro paragraph here explaining the post.
+
+---
+
+## 🪵 Section 1 — Main Image
+
+<img src="/website/assets/blog/POST-FOLDER/main.webp" alt="Main image" style="max-width:100%;height:auto;" />
+
+Write about the image here.
+
+---
+
+## 🛠️ Section 2 — More Images
+
+### Rim Blank
+
+<img src="/website/assets/blog/POST-FOLDER/rim-blank.webp" alt="Rim blank" style="max-width:100%;height:auto;" />
+
+### Neck Rough Carve
+
+<img src="/website/assets/blog/POST-FOLDER/neck-carve.webp" alt="Neck carve" style="max-width:100%;height:auto;" />
+
+Text explaining this step.
+
+---
+
+## 🧩 Section 3 — Additional Notes
+
+More content and steps go here.
+
+---
+
+## 📁 Image Folder for This Post
+
+Images for this post should live in:
+
+</div></section>
+
+
+  <div id="footer"></div>
+
+  <script>
+    function initHeaderFooter() {
+      return Promise.all([
+        fetch('/website/header.html').then(r => r.text()).then(h => {
+          document.getElementById('header').innerHTML = h;
+        }),
+        fetch('/website/footer.html').then(r => r.text()).then(f => {
+          document.getElementById('footer').innerHTML = f;
+        })
+      ]).then(() => {
+        // this runs AFTER header/footer are in the DOM
+        const toggle = document.getElementById('menu-toggle');
+        const nav = document.getElementById('main-nav');
+        if (toggle && nav) {
+          toggle.addEventListener('click', () => {
+            const isOpen = nav.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+          });
+        }
+      });
+    }
+
+    initHeaderFooter().catch(console.error);
+  </script>
+</body>
+</html>
