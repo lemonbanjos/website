@@ -1778,3 +1778,34 @@ figure.about-photo figcaption {
   margin: 2px 0; /* tight spacing */
 }
 
+.price-original.price-strike {
+  text-decoration: line-through;
+  display: block;
+}
+
+.price-sale {
+  color: #c62828; /* or your red */
+  display: block;
+}
+
+.sale-pill {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: #c62828;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.card-price-original.card-price-strike {
+  text-decoration: line-through;
+  display: block;
+}
+
+.card-price-sale {
+  color: #c62828;
+  display: block;
+}
+

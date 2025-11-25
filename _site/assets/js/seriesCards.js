@@ -1,27 +1,31 @@
 // =======================================================
 //  Series Cards Loader (Google Sheets Driven)
-//  - Builds cards for each .card-grid[data-series-prefix]
-//  - Uses Products sheet: A:key, B:title, C:Series Label, D:base_price
+//  - Builds cards for each .card-grid
+//  - Uses Products sheet:
+//      A:key, B:title, C:Series Label,
+//      D:base_price (regular), E:sale_price, F:sale_label, G:sale_active
 //  - Derives image path from data-image-root + key
+//  - Shows sale pricing (struck-through regular + red sale)
 // =======================================================
 
 const SHEET_ID = '1JaKOJLDKDgEvIg54UKKg2J3fftwOsZlKBw1j5qjeheU';
 
-const GVIZ = (sheet, tq) =>
+const GVIZ_SERIES = (sheet, tq) =>
   'https://corsproxy.io/?' +
   'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?' +
   new URLSearchParams({ sheet, tq }).toString();
 
-const rows = t => (t?.rows || []).map(r => (r.c || []).map(c => c?.v ?? null));
+const rowsSeries = t => (t?.rows || []).map(r => (r.c || []).map(c => c?.v ?? null));
 
-const cleanStr = v => (v == null ? '' : String(v).replace(/\u00a0/g, ' ').trim());
+const cleanStrSeries = v =>
+  (v == null ? '' : String(v).replace(/\u00a0/g, ' ').trim());
 
-const fmtUSD = n =>
+const fmtUSDSeries = n =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
     .format(Number(n) || 0);
 
-async function gvizQuery(sheet, tq) {
-  const res = await fetch(GVIZ(sheet, tq), { cache: 'no-store' });
+async function gvizQuerySeries(sheet, tq) {
+  const res = await fetch(GVIZ_SERIES(sheet, tq), { cache: 'no-store' });
   const txt = await res.text();
   const json = JSON.parse(txt.substring(47).slice(0, -2));
   return json.table;
@@ -29,13 +33,23 @@ async function gvizQuery(sheet, tq) {
 
 /**
  * Given a product key like "LEGACY35-LB-00" and an imageRoot like
- * "assets/product_images/35", return a full path:
- *   "assets/product_images/35/lb-00/front.webp"
+ * "assets/product_images/35", return the path to the first numbered image
+ * thumbnail:
+ *
+ *   "assets/product_images/35/lb-00/thumbnails/1.webp"
+ *
+ * Your folder structure per model should now look like:
+ *   assets/product_images/35/lb-00/1.webp
+ *   assets/product_images/35/lb-00/2.webp
+ *   ...
+ *   assets/product_images/35/lb-00/thumbnails/1.webp
+ *   assets/product_images/35/lb-00/thumbnails/2.webp
+ *   ...
+ * (and optionally lightbox/1.webp, 2.webp, etc. for the product page)
  */
 function buildImagePath(key, imageRoot) {
   const safeRoot = imageRoot.replace(/\/+$/, ''); // trim trailing slashes
-
-  const parts = String(key).split('-'); // ["LEGACY35","LB","00"]
+  const parts = String(key).split('-');           // ["LEGACY35","LB","00"]
   let slug;
 
   if (parts.length >= 3) {
@@ -46,118 +60,139 @@ function buildImagePath(key, imageRoot) {
     slug = String(key).toLowerCase();
   }
 
-  return `${safeRoot}/${slug}/front.webp`;
+  // Use the first numbered thumbnail for grid cards
+  return `${safeRoot}/${slug}/1.webp`;
 }
+
 
 async function initSeriesCards() {
   const grids = Array.from(document.querySelectorAll('.card-grid'));
   if (!grids.length) return;
 
-  // Pull all products once; we'll filter per grid
-  const prodTable = await gvizQuery('Products', 'select A,B,C,D');
-  const all = rows(prodTable).map(row => {
-    const [key, title, seriesLabel, basePrice] = row;
+  // Pull all products once
+  const prodTable = await gvizQuerySeries('Products', 'select A,B,C,D,E,F,G');
+  const allProducts = rowsSeries(prodTable).map(row => {
+    const [key, title, seriesLabel, basePrice, salePrice, saleLabel, saleActiveRaw] = row;
+
+    const regularBase = Number(basePrice || 0);
+    const saleBase    = Number(salePrice || 0);
+
+    const saleActive =
+      !!(
+        saleActiveRaw === true ||
+        (typeof saleActiveRaw === 'string' && saleActiveRaw.toLowerCase() === 'true') ||
+        (typeof saleActiveRaw === 'number' && saleActiveRaw === 1)
+      ) && saleBase > 0;
+
+    const effectivePrice = saleActive ? saleBase : regularBase;
+
     return {
-      key: cleanStr(key),          // e.g. "LEGACY35-LB-00"
-      title: cleanStr(title),      // e.g. "LB-00"
-      seriesLabel: cleanStr(seriesLabel),
-      basePrice: Number(basePrice || 0)
+      key: cleanStrSeries(key),
+      title: cleanStrSeries(title),
+      seriesLabel: cleanStrSeries(seriesLabel),
+      regularBase,
+      saleBase,
+      saleActive,
+      saleLabel: cleanStrSeries(saleLabel),
+      effectivePrice
     };
-  }).filter(p => p.key); // keep only valid rows
+  }).filter(p => p.key);
 
-grids.forEach(grid => {
-  const prefix = cleanStr(grid.dataset.seriesPrefix || "").toUpperCase();
-  const allMode = grid.dataset.allBanjos === "true";
-  const imageRoot = cleanStr(grid.dataset.imageRoot || "");
+  grids.forEach(grid => {
+    const prefix   = cleanStrSeries(grid.dataset.seriesPrefix || "").toUpperCase();
+    const allMode  = grid.dataset.allBanjos === "true";
+    const imageRootAttr = cleanStrSeries(grid.dataset.imageRoot || "");
 
-  let models;
+    let models;
 
-  if (allMode) {
-    // Load ALL models in the sheet
-    models = all.slice(); // shallow copy
-  } else if (prefix) {
-    // Only models matching the prefix
-    models = all.filter(p =>
-      p.key.toUpperCase().startsWith(prefix + '-')
-    );
-  } else {
-    return; // nothing to load for this grid
-  }
-  
-  // If this is the All Banjos page, sort by price (lowest → highest)
-if (allMode) {
-  models.sort((a, b) => (a.basePrice || 0) - (b.basePrice || 0));
-}
-
-
-  // Clear loading state
-  grid.querySelectorAll('.loading-message').forEach(m => m.remove());
-
-
-  models.forEach(p => {
-    const href = `banjo.html?key=${encodeURIComponent(p.key)}`;
-    const aria = `View ${p.seriesLabel || ''} ${p.title || p.key}`;
-
-    // If all-banjos mode, choose image-root by SERIES PREFIX
-    let derivedRoot = imageRoot;
-    if (allMode && !derivedRoot) {
-      // Example roots based on your current convention
-      if (p.key.startsWith("LEGACY35")) derivedRoot = "assets/product_images/35";
-      else if (p.key.startsWith("LEGACY54")) derivedRoot = "assets/product_images/54";
-      else if (p.key.startsWith("MASTER"))   derivedRoot = "assets/product_images/master";
-      else if (p.key.startsWith("OLDTIME"))       derivedRoot = "assets/product_images/oldtime";
-      // You can add more here if needed
+    if (allMode) {
+      models = allProducts.slice(); // copy all
+    } else if (prefix) {
+      models = allProducts.filter(p =>
+        p.key.toUpperCase().startsWith(prefix + '-')
+      );
+    } else {
+      return; // nothing to do
     }
 
-    const imgSrc = buildImagePath(p.key, derivedRoot);
+    // Sort by *effective* price (sale if active, else regular)
+    models.sort((a, b) => (a.effectivePrice || 0) - (b.effectivePrice || 0));
 
-    const link = document.createElement('a');
-    link.href = href;
-    link.className = 'card-link-wrapper';
-    link.setAttribute('aria-label', aria);
+    // Remove loading message
+    grid.querySelectorAll('.loading-message').forEach(m => m.remove());
 
-    const article = document.createElement('article');
-    article.className = 'card';
-    article.dataset.modelKey = p.key;
+    models.forEach(p => {
+      const href = `banjo.html?key=${encodeURIComponent(p.key)}`;
+      const aria = `View ${p.seriesLabel || ''} ${p.title || p.key}`;
 
-    const img = document.createElement('img');
-    img.loading = 'lazy';
-    img.src = imgSrc;
-    img.alt = `${p.seriesLabel || 'Lemon'} ${p.title || p.key} banjo`;
-    img.className = 'card-img';
+      // Determine image root
+      let imageRoot = imageRootAttr;
+      if (!imageRoot) {
+        // auto-root for All Banjos based on key prefix
+        if (p.key.startsWith("LEGACY35"))      imageRoot = "assets/product_images/35";
+        else if (p.key.startsWith("LEGACY54")) imageRoot = "assets/product_images/54";
+        else if (p.key.startsWith("MASTER"))   imageRoot = "assets/product_images/master";
+        else if (p.key.startsWith("OLDTIME"))  imageRoot = "assets/product_images/oldtime";
+      }
 
-    const body = document.createElement('div');
-    body.className = 'card-body';
+      const imgSrc = buildImagePath(p.key, imageRoot);
 
-    // OPTIONAL: show series name above model name ONLY on All Banjos page
-if (allMode && p.seriesLabel) {
-  const seriesEl = document.createElement('div');
-  seriesEl.className = 'card-series';
-  seriesEl.textContent = p.seriesLabel;
-  body.appendChild(seriesEl);
-}
-	
-	const h3 = document.createElement('h3');
-    h3.className = 'card-title';
-    h3.textContent = p.title || p.key;
+      const link = document.createElement('a');
+      link.href = href;
+      link.className = 'card-link-wrapper';
+      link.setAttribute('aria-label', aria);
 
-    const priceP = document.createElement('p');
-    priceP.className = 'card-price';
-    priceP.textContent = p.basePrice
-      ? 'Starting at ' + fmtUSD(p.basePrice)
-      : '';
+      const article = document.createElement('article');
+      article.className = 'card';
+      article.dataset.modelKey = p.key;
 
-    body.appendChild(h3);
-    body.appendChild(priceP);
+      const img = document.createElement('img');
+      img.loading = 'lazy';
+      img.src = imgSrc;
+      img.alt = `${p.seriesLabel || 'Lemon'} ${p.title || p.key} banjo`;
+      img.className = 'card-img';
 
-    article.appendChild(img);
-    article.appendChild(body);
-    link.appendChild(article);
+      const body = document.createElement('div');
+      body.className = 'card-body';
 
-    grid.appendChild(link);
+      if (allMode && p.seriesLabel) {
+        const seriesEl = document.createElement('div');
+        seriesEl.className = 'card-series';
+        seriesEl.textContent = p.seriesLabel;
+        body.appendChild(seriesEl);
+      }
+
+      const h3 = document.createElement('h3');
+      h3.className = 'card-title';
+      h3.textContent = p.title || p.key;
+
+      const priceP = document.createElement('p');
+      priceP.className = 'card-price';
+
+      if (p.saleActive && p.saleBase > 0) {
+        priceP.innerHTML = `
+          <span class="card-price-original card-price-strike">
+            Starting at ${fmtUSDSeries(p.regularBase)}
+          </span>
+          <span class="card-price-sale">
+            Now ${fmtUSDSeries(p.saleBase)}
+          </span>
+        `;
+      } else {
+        priceP.textContent = p.regularBase
+          ? `Starting at ${fmtUSDSeries(p.regularBase)}`
+          : '';
+      }
+
+      body.appendChild(h3);
+      body.appendChild(priceP);
+
+      article.appendChild(img);
+      article.appendChild(body);
+      link.appendChild(article);
+      grid.appendChild(link);
+    });
   });
-});
-
 }
 
 // Kick it off on DOM ready

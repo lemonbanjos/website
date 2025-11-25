@@ -1,8 +1,15 @@
 // =======================================================
 //  Lemon Banjo Product Info (Google Sheets Driven)
 //  - Uses ?key=LEGACY35-LB-3 from URL
+//  - Products sheet: A:key, B:title, C:series, D:base_price,
+//                    E:sale_price, F:sale_label, G:sale_active, H:image_count
+//  - Options sheet:  A:key, B:group, C:option_name, D:price_delta,
+//                    E:price_type ("flat" or "percent"), F:is_default (TRUE/FALSE),
+//                    G:sort, H:visible (TRUE/FALSE), I:dep_group, J:dep_value
+//  - Specs sheet:    A:key, B:section, C:label, D:value, E:sort
 //  - Builds options with dependencies + defaults
-//  - Re-calculates price on changes
+//  - Re-calculates regular + sale price on changes
+//  - Builds image gallery from numbered images (1.webp, 2.webp, ...)
 //  - Exposes window.LemonBanjo.getConfig() for EmailJS
 // =======================================================
 
@@ -13,151 +20,132 @@ const GVIZ = (sheet, tq) =>
   'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?' +
   new URLSearchParams({ sheet, tq }).toString();
 
-// ---------- KEY / MODEL ----------
+const rows = t => (t?.rows || []).map(r => (r.c || []).map(c => c?.v ?? null));
 
-function getModelKey() {
-  const params = new URLSearchParams(window.location.search);
-  const fromUrl = params.get('key');
-  if (fromUrl && String(fromUrl).trim()) {
-    return String(fromUrl).trim().toUpperCase();
-  }
+const cleanStr = v =>
+  (v == null ? '' : String(v).replace(/\u00a0/g, ' ').trim());
 
-  const fromData = document.body?.dataset?.model;
-  if (fromData && String(fromData).trim()) {
-    return String(fromData).trim().toUpperCase();
-  }
-
-  console.warn('No ?key=… found; falling back to LEGACY35-LB-00');
-  return 'LEGACY35-LB-00';
-}
-
-const MODEL = getModelKey();
 const fmtUSD = n =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
     .format(Number(n) || 0);
 
-// ---------- GLOBAL STATE ----------
+// ---------- KEY / MODEL ----------
 
-const LemonState = {
-  model: MODEL,          // e.g. "LEGACY35-LB-3"
-  product: null,         // { model_id, title, series, base_price }
-  optionsByCanon: null,  // { groupCanon: [option, ...] }
-  groupNameMap: null,    // { groupCanon: "Display Name" }
-  specs: null,           // { section: [{ label, value, sort }, ...] }
-  selected: new Map(),   // Map<groupCanon, option_name>
-  total: 0
-};
+function getModelKey() {
+  const params = new URLSearchParams(window.location.search);
+  const keyFromUrl = params.get('key');
+  if (keyFromUrl && keyFromUrl.trim()) {
+    return keyFromUrl.trim();
+  }
+  const bodyKey = document.body?.dataset?.modelKey;
+  if (bodyKey && bodyKey.trim()) {
+    return bodyKey.trim();
+  }
+  console.warn('No ?key= provided, defaulting to LEGACY35-LB-00');
+  return 'LEGACY35-LB-00';
+}
 
-// ---------- HELPERS ----------
-
-const rows = t => (t?.rows || []).map(r => (r.c || []).map(c => c?.v ?? null));
-const cleanStr = v =>
-  (v == null ? '' : String(v).replace(/\u00a0/g, ' ').trim());
-const lc = v => cleanStr(v).toLowerCase();
-const canon = s =>
-  cleanStr(s)
-    .normalize('NFKC')
-    .replace(/[^0-9A-Za-z]+/g, ' ')
-    .trim()
-    .toLowerCase();
+const MODEL = getModelKey();
 
 async function gvizQuery(sheet, tq) {
-  const res = await fetch(GVIZ(sheet, tq), { cache: 'no-store' });
+  const url = GVIZ(sheet, tq);
+  const res = await fetch(url, { cache: 'no-store' });
   const txt = await res.text();
   const json = JSON.parse(txt.substring(47).slice(0, -2));
   return json.table;
 }
 
-function dependencyOk(option, selectedMap) {
-  if (!option.dep_groupCanon) return true;
-  const selectedVal = lc(selectedMap.get(option.dep_groupCanon));
-  if (!selectedVal) return false;
-  return selectedVal === lc(option.dep_value);
-}
+// ---------- GLOBAL STATE ----------
 
-function calcPrice(base, selected, optionsByCanon) {
-  let total = base;
-  for (const [canonGroup, optionName] of selected) {
-    const list = optionsByCanon[canonGroup] || [];
-    const item = list.find(o => o.option_name === optionName);
-    if (!item) continue;
+const LemonState = {
+  model: MODEL,          // e.g. "LEGACY35-LB-3"
+  product: null,         // { model_id, title, series, base_price, sale_price, sale_label, sale_active, image_count }
+  optionsByCanon: null,  // { groupCanon: [option, ...] }
+  groupNameMap: null,    // { groupCanon: displayName }
+  selected: {},          // { groupCanon: option_name }
+  specs: null            // { section: [ {label,value,sort}, ... ] }
+};
 
-    if (item.price_type === 'add') {
-      total += item.price_delta;
-    } else if (item.price_type === 'pct') {
-      total += base * (item.price_delta / 100);
-    } else if (item.price_type === 'abs') {
-      total += item.price_delta;
-    }
+const canon = s => cleanStr(s).toLowerCase();
+
+// ---------- IMAGE FOLDER HELPERS ----------
+
+/**
+ * Given a product key like "LEGACY35-LB-3", return the base folder
+ * containing numbered webp images, e.g. "assets/product_images/35/lb-3".
+ */
+function getImageBaseFolder(modelKey) {
+  const key = String(modelKey || '').toUpperCase();
+  let root = 'assets/product_images';
+
+  if (key.startsWith('LEGACY35')) root = 'assets/product_images/35';
+  else if (key.startsWith('LEGACY54')) root = 'assets/product_images/54';
+  else if (key.startsWith('MASTER')) root = 'assets/product_images/master';
+  else if (key.startsWith('OLDTIME')) root = 'assets/product_images/oldtime';
+
+  const parts = key.split('-'); // ["LEGACY35","LB","3"]
+  let slug = '';
+
+  if (parts.length >= 3) {
+    slug = (parts[1] + '-' + parts[2]).toLowerCase();
+  } else if (parts.length === 2) {
+    slug = parts[1].toLowerCase();
+  } else {
+    slug = key.toLowerCase();
   }
-  return total;
+
+  return root.replace(/\/+$/, '') + '/' + slug;
 }
 
-function chooseDefault(validList, currentName) {
-  if (!validList.length) return null;
-  if (currentName && validList.some(o => o.option_name === currentName)) {
-    return currentName;
-  }
-  const def = validList.find(o => o.is_default);
-  return def ? def.option_name : validList[0].option_name;
-}
-
-// ---------- LOAD DATA FROM SHEET ----------
-//
-// Products sheet:
-//   A: key          (e.g. "LEGACY35-LB-3")
-//   B: title        (e.g. "LB-3")
-//   C: Series Label (e.g. "Legacy ’35 Series")
-//   D: base_price
-//
-// Options sheet (your current layout):
-//   A: model_id
-//   B: group
-//   C: option_name
-//   D: price_delta
-//   E: price_type
-//   F: is_default
-//   G: sort
-//   H: visible
-//   I: dep_group
-//   J: dep_value
-//
-// Specs sheet:
-//   A: model_id
-//   B: section
-//   C: label
-//   D: value
-//   E: sort
-// ---------------------------------------------------
+// ---------- LOAD DATA ----------
 
 async function loadData(modelKey) {
   const key = modelKey || MODEL;
 
   const [prodT, optT, specT] = await Promise.all([
-    gvizQuery('Products', `select A,B,C,D where A='${key}'`),
-    gvizQuery('Options',  `select B,C,D,E,F,G,H,I,J where A='${key}' order by B asc, G asc`),
+    gvizQuery('Products', `select A,B,C,D,E,F,G,H where A='${key}'`),
+    gvizQuery('Options',  `select B,C,D,E,F,G,H,I,J where A='${key}'`),
     gvizQuery('Specs',    `select B,C,D,E where A='${key}' order by B asc, E asc`)
   ]);
 
   // ---------- Product ----------
-  const [pKey, pTitle, pSeries, pBase] = rows(prodT)[0] || [];
+  const prodRow = rows(prodT)[0] || [];
+  const [pKey, pTitle, pSeries, pBase, pSale, pSaleLabel, pSaleActive, pImageCount] = prodRow;
+
   if (!pKey) {
     console.error('No product row found for key', key);
     throw new Error('Product not found');
   }
 
+  const base_price = Number(pBase || 0);
+  const sale_price = Number(pSale || 0);
+
+  const sale_active =
+    !!(
+      pSaleActive === true ||
+      (typeof pSaleActive === 'string' && pSaleActive.toLowerCase() === 'true') ||
+      (typeof pSaleActive === 'number' && pSaleActive === 1)
+    ) && sale_price > 0;
+
+  const image_count = Number(pImageCount || 0) || 1;
+
   const product = {
-    model_id: pKey,
-    title: cleanStr(pTitle || pKey),
-    series: cleanStr(pSeries),          // already "Legacy ’35 Series"
-    base_price: Number(pBase || 0)
+    model_id: cleanStr(pKey),
+    title: cleanStr(pTitle),
+    series: cleanStr(pSeries),
+    base_price,
+    sale_price,
+    sale_label: cleanStr(pSaleLabel),
+    sale_active,
+    image_count
   };
 
   // ---------- Options ----------
+  const optionRows = rows(optT);
   const optionsByCanon = {};
   const groupNameMap = {};
 
-  rows(optT).forEach(row => {
+  optionRows.forEach(row => {
     const [
       groupName,
       optName,
@@ -177,16 +165,27 @@ async function loadData(modelKey) {
     const optNameClean = cleanStr(optName);
     if (!optNameClean) return;
 
-    const price_type  = cleanStr(priceType).toLowerCase();  // "add","pct","abs"
     const price_delta = Number(priceDelta || 0);
-    const isDefBool   = (String(isDefault).toLowerCase() === 'true' || isDefault === true);
-    const sortNum     = Number(sort || 0);
-    const visibleBool = (String(visible).toLowerCase() === 'true' || visible === true);
-    const depGroupCanon = depGroup ? canon(depGroup) : null;
-    const depValClean   = depValue ? cleanStr(depValue) : null;
+    const price_type = (cleanStr(priceType) || 'flat').toLowerCase() === 'percent'
+      ? 'percent'
+      : 'flat';
+
+    const sortNum = Number(sort || 0);
+    const visibleBool =
+      visible === true ||
+      (typeof visible === 'string' && visible.toLowerCase() === 'true') ||
+      (typeof visible === 'number' && visible === 1);
+
+    const depGroupCanon = canon(depGroup);
+    const depValClean = cleanStr(depValue);
+
+    const isDefBool =
+      isDefault === true ||
+      (typeof isDefault === 'string' && isDefault.toLowerCase() === 'true') ||
+      (typeof isDefault === 'number' && isDefault === 1);
 
     if (!optionsByCanon[groupCanon]) optionsByCanon[groupCanon] = [];
-    if (!groupNameMap[groupCanon])   groupNameMap[groupCanon] = groupOrig;
+    if (!groupNameMap[groupCanon]) groupNameMap[groupCanon] = groupOrig;
 
     optionsByCanon[groupCanon].push({
       groupCanon,
@@ -203,170 +202,248 @@ async function loadData(modelKey) {
   });
 
   // ---------- Specs ----------
+  const specRows = rows(specT);
   const specs = {};
-  rows(specT).forEach(row => {
+  specRows.forEach(row => {
     const [section, label, value, sort] = row;
     const sec = cleanStr(section);
     const lab = cleanStr(label);
     const val = cleanStr(value);
-    const sortNum = Number(sort || 0);
+    const srt = Number(sort || 0);
     if (!sec || !lab || !val) return;
-
     if (!specs[sec]) specs[sec] = [];
-    specs[sec].push({ label: lab, value: val, sort: sortNum });
+    specs[sec].push({ label: lab, value: val, sort: srt });
   });
 
-  // ---------- Save to state ----------
-  LemonState.product       = product;
+  LemonState.product = product;
   LemonState.optionsByCanon = optionsByCanon;
-  LemonState.groupNameMap   = groupNameMap;
-  LemonState.specs          = specs;
-  LemonState.selected       = LemonState.selected || new Map();
-  LemonState.total          = product.base_price;
-
-  // Push into LemonBanjo config for EmailJS
-  if (window.LemonBanjo && typeof window.LemonBanjo.setConfig === 'function') {
-    window.LemonBanjo.setConfig({
-      id: product.model_id,
-      series: product.series,
-      model: product.title,
-      base_price: product.base_price,
-      final_price: product.base_price
-    });
-  }
+  LemonState.groupNameMap = groupNameMap;
+  LemonState.specs = specs;
+  LemonState.selected = {};
 
   return { product, optionsByCanon, groupNameMap, specs };
 }
 
-// ---------- RENDER ----------
+// ---------- RENDER HEADER & DESCRIPTION ----------
 
-function renderHeader(p) {
-  const series = cleanStr(p.series);
-  const model  = cleanStr(p.title || p.model_id || '');
-
+function renderHeader(product) {
   const seriesEl = document.getElementById('seriesText');
-  if (seriesEl) {
-    seriesEl.textContent = series
-      ? `Lemon Banjos — ${series}`
-      : 'Lemon Banjos';
-  }
-
   const titleEl = document.getElementById('productTitle');
-  if (titleEl && model) {
-    titleEl.textContent = model;
+
+  if (seriesEl) {
+    seriesEl.textContent = product.series || 'Lemon Banjos';
+  }
+  if (titleEl) {
+    titleEl.textContent = product.title || product.model_id;
   }
 
-  const priceEl = document.getElementById('productPrice');
-  if (priceEl) {
-    priceEl.textContent = fmtUSD(p.base_price);
-    priceEl.dataset.base = p.base_price;
-  }
-
-  if (model) {
-    document.title = series
-      ? `Lemon “${series}” ${model}`
-      : `Lemon ${model}`;
+  if (product.title) {
+    document.title = `${product.title} | Lemon Banjo`;
   }
 }
+
+// ---------- RENDER OPTIONS UI ----------
+
+// ---------- RENDER OPTIONS UI (ALL AS DROPDOWNS) ----------
 
 function renderOptions(optionsByCanon, groupNameMap) {
-  const host = document.getElementById('productOptions');
-  if (!host) return;
+  const container = document.getElementById('productOptions');
+  if (!container) return;
 
-  const selected = LemonState.selected = LemonState.selected || new Map();
+  container.innerHTML = '';
+  LemonState.selected = LemonState.selected || {};
 
-  const entries = Object.entries(optionsByCanon).map(([gCanon, list]) => [
-    gCanon,
-    [...list].sort((a, b) => a.sort - b.sort)
-  ]);
+ const entries = Object.entries(optionsByCanon); // keep sheet order
 
-  const isDependent = ([, list]) => list.some(o => o.dep_groupCanon);
-  const providers  = entries.filter(e => !isDependent(e));
-  const dependents = entries.filter(e =>  isDependent(e));
 
-  for (const [gCanon, list] of providers) {
-    const visible = list.filter(o => o.visible);
-    if (!visible.length) { selected.delete(gCanon); continue; }
-    const next = chooseDefault(visible, selected.get(gCanon));
-    if (next) selected.set(gCanon, next);
-  }
+  entries.forEach(([groupCanon, options]) => {
+    if (!options || !options.length) return;
 
-  function pruneInvalidDependents() {
-    for (const [gCanon, list] of dependents) {
-      const valid = list.filter(o => o.visible && dependencyOk(o, selected));
-      if (!valid.length) selected.delete(gCanon);
-    }
-  }
+    const displayName = groupNameMap[groupCanon] || groupCanon;
 
-  function normalizeDependents() {
-    for (const [gCanon, list] of dependents) {
-      const valid = list.filter(o => o.visible && dependencyOk(o, selected));
-      const next = chooseDefault(valid, selected.get(gCanon));
-      if (next) selected.set(gCanon, next);
-      else selected.delete(gCanon);
-    }
-  }
+    const block = document.createElement('div');
+    block.className = 'option-block';
+    block.dataset.groupCanon = groupCanon;
 
-  function draw() {
-    pruneInvalidDependents();
-    normalizeDependents();
+    const labelP = document.createElement('p');
+    labelP.textContent = displayName;
+    block.appendChild(labelP);
 
-    host.innerHTML = '';
-    const ordered = [...providers, ...dependents];
+    const select = document.createElement('select');
+    select.className = 'option-select';
+    select.dataset.groupCanon = groupCanon;
 
-    for (const [gCanon, list] of ordered) {
-      const labelText = groupNameMap[gCanon] || gCanon;
-      const valid = list.filter(o => o.visible && (!o.dep_groupCanon || dependencyOk(o, selected)));
-      if (!valid.length) continue;
+    // Build <option> tags in the same order as options[]
+    let defaultName = null;
 
-      const wrap = document.createElement('div');
-      wrap.className = 'option-block';
+    options.forEach((opt, idx) => {
+      const optEl = document.createElement('option');
+      optEl.value = opt.option_name;
+      optEl.textContent = opt.option_name;
 
-      const label = document.createElement('p');
-      label.textContent = labelText;
-      wrap.appendChild(label);
+      // We don't hide anything here; dependencies/visibility are handled
+      // later in updateOptionVisibility(), which uses the same index.
+      if (opt.is_default && !defaultName) {
+        defaultName = opt.option_name;
+      }
 
-      const sel = document.createElement('select');
-      sel.name = labelText.replace(/\s+/g, '_');
+      select.appendChild(optEl);
+    });
 
-      const current = selected.get(gCanon);
-      valid.forEach(o => {
-        const el = document.createElement('option');
-        el.value = o.option_name;
-        const bump = o.price_delta
-          ? (o.price_type === 'pct'
-              ? ` (+${o.price_delta}%)`
-              : ` (+${fmtUSD(o.price_delta)})`)
-          : '';
-        el.textContent = o.option_name + bump;
-        el.selected = (o.option_name === current);
-        sel.appendChild(el);
-      });
-
-      sel.addEventListener('change', e => {
-        selected.set(gCanon, e.target.value);
-        const changingIsProvider = providers.some(([pCanon]) => pCanon === gCanon);
-        if (changingIsProvider) pruneInvalidDependents();
-        draw();
-      });
-
-      wrap.appendChild(sel);
-      host.appendChild(wrap);
+    // Fallback default: first option
+    if (!defaultName && options.length) {
+      defaultName = options[0].option_name;
     }
 
-    const baseNum = +(document.getElementById('productPrice')?.dataset.base || 0);
-    const total = calcPrice(baseNum, selected, optionsByCanon);
-    const priceEl = document.getElementById('productPrice');
-    if (priceEl) priceEl.textContent = fmtUSD(total);
-    LemonState.total = total;
+    // If we already had a selection saved (e.g. after redraw), use that
+    const existing = LemonState.selected[groupCanon];
+    const initialValue = existing || defaultName;
 
-    if (window.LemonBanjo && typeof window.LemonBanjo.setConfig === 'function') {
-      window.LemonBanjo.setConfig({ final_price: total });
+    if (initialValue) {
+      LemonState.selected[groupCanon] = initialValue;
+      select.value = initialValue;
     }
-  }
 
-  draw();
+    select.addEventListener('change', () => {
+      LemonState.selected[groupCanon] = select.value;
+      recalcPrice();
+      updateEmailConfig();
+      updateOptionVisibility();
+    });
+
+    block.appendChild(select);
+    container.appendChild(block);
+  });
+
+  // After initial render, apply visibility/dependency rules and recompute price
+  updateOptionVisibility();
+  recalcPrice();
+  updateEmailConfig();
 }
+
+
+// ---------- OPTION VISIBILITY (DEPENDENCIES) ----------
+
+function updateOptionVisibility() {
+  const state = LemonState;
+  const { optionsByCanon, selected } = state;
+
+  if (!optionsByCanon) return;
+
+  Object.entries(optionsByCanon).forEach(([groupCanon, opts]) => {
+    const block = document.querySelector(`.option-block[data-group-canon="${groupCanon}"]`);
+    if (!block) return;
+
+    let anyVisible = false;
+
+    const radios = block.querySelectorAll('input[type="radio"]');
+    const select = block.querySelector('select');
+
+    opts.forEach((opt, idx) => {
+      let show = opt.visible;
+
+      if (show && opt.dep_groupCanon && opt.dep_value) {
+        const depSel = selected[opt.dep_groupCanon];
+        show = cleanStr(depSel).toLowerCase() === cleanStr(opt.dep_value).toLowerCase();
+      }
+
+      if (radios.length) {
+        const radio = radios[idx];
+        const label = block.querySelector(`label[for="${radio?.id}"]`);
+        if (radio && label) {
+          radio.parentElement.style.display = show ? '' : 'none';
+          if (!show && radio.checked) {
+            radio.checked = false;
+          }
+        }
+      } else if (select) {
+        const optEl = select.options[idx];
+        if (optEl) {
+          optEl.hidden = !show;
+        }
+      }
+
+      if (show) anyVisible = true;
+    });
+
+    block.style.display = anyVisible ? '' : 'none';
+  });
+}
+
+// ---------- PRICE CALCULATION ----------
+
+function recalcPrice() {
+  const p = LemonState.product;
+  if (!p) return;
+
+  let baseRegular = Number(p.base_price || 0);
+  let baseSale = p.sale_active ? Number(p.sale_price || 0) : 0;
+
+  let totalRegular = baseRegular;
+  let totalSale = baseSale;
+
+  const { optionsByCanon, selected } = LemonState;
+
+  if (optionsByCanon) {
+    Object.entries(optionsByCanon).forEach(([groupCanon, opts]) => {
+      const chosenName = selected[groupCanon];
+      if (!chosenName) return;
+      const opt = opts.find(o => o.option_name === chosenName);
+      if (!opt) return;
+
+      const delta = Number(opt.price_delta || 0);
+      if (opt.price_type === 'percent') {
+        totalRegular += baseRegular * (delta / 100);
+        if (p.sale_active && totalSale > 0) {
+          totalSale += baseSale * (delta / 100);
+        }
+      } else {
+        totalRegular += delta;
+        if (p.sale_active && totalSale > 0) {
+          totalSale += delta;
+        }
+      }
+    });
+  }
+
+  // Update DOM
+  const priceEl = document.getElementById('productPrice');
+  if (priceEl) {
+    if (p.sale_active && totalSale > 0) {
+      priceEl.innerHTML = `
+        <span class="price-original price-strike">${fmtUSD(totalRegular)}</span>
+        <span class="price-sale">${fmtUSD(totalSale)}</span>
+      `;
+    } else {
+      priceEl.textContent = fmtUSD(totalRegular);
+    }
+    priceEl.dataset.base = totalRegular.toString();
+  }
+
+  const priceBlock = document.querySelector('.product-price-block');
+  if (priceBlock) {
+    let badge = document.getElementById('saleBadge');
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.id = 'saleBadge';
+      badge.className = 'sale-pill';
+      priceBlock.appendChild(badge);
+    }
+
+    if (p.sale_active && p.sale_label) {
+      badge.textContent = p.sale_label;
+      badge.style.display = 'inline-block';
+    } else {
+      badge.textContent = '';
+      badge.style.display = 'none';
+    }
+  }
+
+  // Update config used by EmailJS
+  updateEmailConfig();
+}
+
+// ---------- SPECS RENDER ----------
 
 function renderSpecs(specs) {
   const grid = document.getElementById('specsGrid');
@@ -378,6 +455,7 @@ function renderSpecs(specs) {
     const rowsClean = arr
       .map(r => ({ label: cleanStr(r.label), value: cleanStr(r.value) }))
       .filter(r => r.label && r.value);
+
     if (!rowsClean.length) return;
 
     const card = document.createElement('article');
@@ -386,54 +464,176 @@ function renderSpecs(specs) {
       <header><h3>${section}</h3></header>
       <table class="spec-table">
         ${rowsClean.map(r => `<tr><th>${r.label}</th><td>${r.value}</td></tr>`).join('')}
-      </table>`;
+      </table>
+    `;
     grid.appendChild(card);
+  });
+}
+
+// ---------- GALLERY (numbered images + lightbox) ----------
+
+function setupGallery(product) {
+  const imageCount = Number(product.image_count || 0) || 1;
+  const baseFolder = getImageBaseFolder(product.model_id);
+  const thumbRail = document.getElementById('thumbRail') || document.querySelector('.thumb-rail');
+  const mainImg = document.getElementById('mainImage');
+  if (!thumbRail || !mainImg) return;
+
+  thumbRail.innerHTML = '';
+
+  const galleryImages = [];       // normal large images
+  const lightboxImages = [];      // high-res lightbox images
+
+  for (let i = 1; i <= imageCount; i++) {
+    const large = `${baseFolder}/${i}.webp`;
+    const thumb = `${baseFolder}/thumbnails/${i}.webp`;
+    const lightboxSrc = `${baseFolder}/lightbox/${i}.webp`;
+
+    const img = document.createElement('img');
+    img.src = thumb;
+    img.dataset.large = large;
+    img.dataset.lightboxLarge = lightboxSrc;    // <-- NEW
+    img.className = 'thumbnail';
+    img.alt = `${product.title || 'Banjo'} view ${i}`;
+    img.setAttribute('role', 'listitem');
+    img.tabIndex = 0;
+
+    if (i === 1) img.classList.add('active');
+
+    img.addEventListener('click', () => {
+      document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+      img.classList.add('active');
+      mainImg.src = large;
+      mainImg.dataset.large = large;
+      mainImg.dataset.lightboxLarge = lightboxSrc;   // <-- NEW
+    });
+
+    img.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        img.click();
+      }
+    });
+
+    thumbRail.appendChild(img);
+
+    galleryImages.push(large);
+    lightboxImages.push(lightboxSrc);   // <-- NEW ARRAY
+  }
+
+  // Set main image from #1
+  mainImg.src = galleryImages[0];
+  mainImg.dataset.large = galleryImages[0];
+  mainImg.dataset.lightboxLarge = lightboxImages[0];
+  mainImg.alt = `${product.title || 'Banjo'} – front`;
+  mainImg.loading = 'lazy';
+
+  // ----- Lightbox -----
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const closeBtn = lightbox?.querySelector('.close');
+  const prevBtn = lightbox?.querySelector('.prev');
+  const nextBtn = lightbox?.querySelector('.next');
+
+  let currentIndex = 0;
+
+  function openLightbox(src) {
+    const idx = lightboxImages.indexOf(src);
+    if (idx >= 0) currentIndex = idx;
+    if (!lightbox || !lightboxImg) return;
+    lightboxImg.src = src;
+    lightbox.classList.add('open');
+  }
+
+  function closeLightbox() {
+    if (!lightbox) return;
+    lightbox.classList.remove('open');
+  }
+
+  function showRelative(delta) {
+    if (!lightboxImages.length || !lightboxImg) return;
+    currentIndex = (currentIndex + delta + lightboxImages.length) % lightboxImages.length;
+    lightboxImg.src = lightboxImages[currentIndex];
+  }
+
+  mainImg.addEventListener('click', () => {
+    openLightbox(mainImg.dataset.lightboxLarge || mainImg.dataset.large);
+  });
+
+  closeBtn?.addEventListener('click', closeLightbox);
+  prevBtn?.addEventListener('click', () => showRelative(-1));
+  nextBtn?.addEventListener('click', () => showRelative(1));
+
+  lightbox?.addEventListener('click', e => {
+    if (e.target === lightbox) closeLightbox();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (!lightbox || !lightbox.classList.contains('open')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') showRelative(-1);
+    if (e.key === 'ArrowRight') showRelative(1);
+  });
+}
+
+
+// ---------- EMAIL CONFIG ----------
+
+function updateEmailConfig() {
+  const p = LemonState.product;
+  if (!p || typeof window.LemonBanjo === 'undefined') return;
+
+  const priceEl = document.getElementById('productPrice');
+  const priceText = priceEl ? priceEl.textContent : '';
+  const basePrice = p.base_price;
+
+  const selections = {};
+  const { groupNameMap, selected } = LemonState;
+
+  Object.entries(selected || {}).forEach(([canonKey, val]) => {
+    if (!val) return;
+    const displayGroup =
+      (groupNameMap && groupNameMap[canonKey]) || canonKey;
+    selections[displayGroup] = val;
+  });
+
+  const finalPriceNum = (() => {
+    const match = priceText.match(/([\d,.]+)/g);
+    if (!match) return basePrice;
+    const last = match[match.length - 1].replace(/,/g, '');
+    const n = parseFloat(last);
+    return isNaN(n) ? basePrice : n;
+  })();
+
+  window.LemonBanjo.setConfig({
+    id: p.model_id || MODEL,
+    model: p.model_id || '',
+    title: p.title || '',
+    series: p.series || '',
+    base_price: basePrice,
+    final_price: finalPriceNum,
+    selections
   });
 }
 
 // ---------- INIT ----------
 
-document.addEventListener('DOMContentLoaded', () => {
-  loadData(MODEL)
-    .then(({ product, optionsByCanon, groupNameMap, specs }) => {
-      renderHeader(product);
-      renderOptions(optionsByCanon, groupNameMap);
-      renderSpecs(specs);
-    })
-    .catch(err => {
-      console.error(err);
-      const priceEl = document.getElementById('productPrice');
-      if (priceEl) priceEl.textContent = 'Price unavailable';
-    });
-});
+async function initProductPage() {
+  try {
+    const { product, optionsByCanon, groupNameMap, specs } = await loadData(MODEL);
+    renderHeader(product);
+    renderOptions(optionsByCanon, groupNameMap);
+    renderSpecs(specs);
+    setupGallery(product);
+    updateOptionVisibility();
+    recalcPrice(); // also calls updateEmailConfig
+  } catch (err) {
+    console.error('Error initializing product page', err);
+    const titleEl = document.getElementById('productTitle');
+    if (titleEl) titleEl.textContent = 'Banjo Not Found';
+    const priceEl = document.getElementById('productPrice');
+    if (priceEl) priceEl.textContent = '';
+  }
+}
 
-// ---------- EMAILJS BRIDGE ----------
-
-window.LemonBanjo = window.LemonBanjo || {};
-window.LemonBanjo.getConfig = function () {
-  const p = LemonState.product || {};
-  const base_price = Number(p.base_price || 0);
-  const final_price = Number(LemonState.total || base_price);
-
-  const seriesText = (document.getElementById('seriesText')?.textContent || '');
-  const series = p.series || seriesText.replace(/^Lemon Banjos —\s*/, '') || '';
-
-  const modelTitle = p.title || p.model_id || '';
-
-  const selections = {};
-  (LemonState.selected || new Map()).forEach((val, canonKey) => {
-    const displayGroup =
-      (LemonState.groupNameMap && LemonState.groupNameMap[canonKey]) || canonKey;
-    selections[displayGroup] = val;
-  });
-
-  return {
-    id: p.model_id || MODEL,
-    model: p.model_id || '',
-    title: modelTitle,
-    series,
-    base_price,
-    final_price,
-    selections
-  };
-};
+document.addEventListener('DOMContentLoaded', initProductPage);
