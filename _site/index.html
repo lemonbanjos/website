@@ -20,46 +20,95 @@
   </section>
 
   <!-- STANDARD BANJOS -->
-  <section id="standard" class="section">
+  <section id="standard" class="section section-alt1">
     <div class="container">
       <h2 class="section-title">My Banjos</h2>
       <p class="section-tagline">A Lemon has never been sweeter!</p>
-<div class="card-scroll" id="homeCards">
-  <button class="card-arrow card-arrow--prev" aria-label="Previous banjo">‹</button>
-      <div class="card-grid card-grid--scroll">
+
+      <!-- DESKTOP CAROUSEL (unchanged) -->
+      <div class="card-scroll desktop-only">
+        <button class="card-arrow card-arrow--prev" aria-label="Previous banjo">‹</button>
+
+        <div class="card-grid card-grid--scroll">
+          <a class="card-link" href="oldtimeSeries.html">
+            <article class="card">
+              <img loading="lazy" src="assets/product_images/oldtime/ot-1/front.webp" class="card-img">
+              <div class="card-body">
+                <h3 class="card-title">Oldtime Series</h3>
+                <p>View 1 Banjo</p>
+              </div>
+            </article>
+          </a>
+
+          <a class="card-link" href="legacySeries.html">
+            <article class="card">
+              <img loading="lazy" src="assets/product_images/35/lb-3/front.webp" class="card-img">
+              <div class="card-body">
+                <h3 class="card-title">Legacy Series</h3>
+                <p>View 9 Banjos</p>
+              </div>
+            </article>
+          </a>
+
+          <a class="card-link" href="masterSeries.html">
+            <article class="card">
+              <img loading="lazy" src="assets/product_images/master/bearfork/front.webp" class="card-img">
+              <div class="card-body">
+                <h3 class="card-title">Master Series</h3>
+                <p>View 1 Banjo</p>
+              </div>
+            </article>
+          </a>
+
+          <a class="card-link" href="customBanjos.html">
+            <article class="card">
+              <img loading="lazy" src="assets/images/customBanjo.webp" class="card-img">
+              <div class="card-body">
+                <h3 class="card-title">Custom Series</h3>
+                <p>Learn More</p>
+              </div>
+            </article>
+          </a>
+        </div>
+
+        <button class="card-arrow card-arrow--next" aria-label="Next banjo">›</button>
+      </div>
+
+      <!-- MOBILE GRID (2×2) -->
+      <div class="home-mobile-grid mobile-only">
         <a class="card-link" href="oldtimeSeries.html">
           <article class="card">
-            <img loading="lazy" src="assets/product_images/oldtime/ot-1/front.webp" alt="Oldtime Series banjo placeholder" class="card-img">
+            <img loading="lazy" src="assets/product_images/oldtime/ot-1/front.webp" class="card-img">
             <div class="card-body">
               <h3 class="card-title">Oldtime Series</h3>
-              <p>View 1 Banjo</p>
+              <p>1 Banjo</p>
             </div>
           </article>
         </a>
 
         <a class="card-link" href="legacySeries.html">
           <article class="card">
-            <img loading="lazy" src="assets/product_images/35/lb-3/front.webp" alt="Legacy Series banjo" class="card-img">
+            <img loading="lazy" src="assets/product_images/35/lb-3/front.webp" class="card-img">
             <div class="card-body">
               <h3 class="card-title">Legacy Series</h3>
-              <p>View 9 Banjos</p>
+              <p>9 Banjos</p>
             </div>
           </article>
         </a>
 
         <a class="card-link" href="masterSeries.html">
           <article class="card">
-            <img loading="lazy" src="assets/product_images/master/bearfork/front.webp" alt="Master Series banjo" class="card-img">
+            <img loading="lazy" src="assets/product_images/master/bearfork/front.webp" class="card-img">
             <div class="card-body">
               <h3 class="card-title">Master Series</h3>
-              <p>View 1 Banjo</p>
+              <p>1 Banjo</p>
             </div>
           </article>
         </a>
-		
-		<a class="card-link" href="customBanjos.html">
+
+        <a class="card-link" href="customBanjos.html">
           <article class="card">
-            <img loading="lazy" src="assets/images/customBanjo.webp" alt="75 Custom banjo placeholder" class="card-img">
+            <img loading="lazy" src="assets/images/customBanjo.webp" class="card-img">
             <div class="card-body">
               <h3 class="card-title">Custom Series</h3>
               <p>Learn More</p>
@@ -67,14 +116,106 @@
           </article>
         </a>
       </div>
-	  <button class="card-arrow card-arrow--next" aria-label="Next banjo">›</button>
-</div>
 
       <div class="center">
         <a class="button" href="allBanjos.html">View All Banjos</a>
       </div>
     </div>
   </section>
+  
+  <!-- CONTACT SECTION -->
+<section class="section section-gray" id="contact">
+  <div class="container narrow">
+    <h2 class="section-title">Contact Me</h2>
+    <p class="text-center">Have a question about a banjo, setup work, or a custom build?
+      Send me a message below and I’ll get back to you shortly.</p>
+
+    <form id="contactForm" style="margin-top: 24px; display: grid; gap: 18px;">
+
+      <div>
+        <label for="cName">Name</label>
+        <input id="cName" name="from_name" type="text" required
+               placeholder="Your name" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc;">
+      </div>
+
+      <div>
+        <label for="cEmail">Email</label>
+        <input id="cEmail" name="from_email" type="email" required
+               placeholder="you@example.com" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc;">
+      </div>
+
+      <div>
+        <label for="cPhone">Phone (optional)</label>
+        <input id="cPhone" name="phone" type="text"
+               placeholder="(555) 123-4567" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc;">
+      </div>
+
+      <div>
+        <label for="cSubject">Subject</label>
+        <input id="cSubject" name="subject" type="text" required
+               placeholder="Subject" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc;">
+      </div>
+
+      <div>
+        <label for="cMessage">Message</label>
+        <textarea id="cMessage" name="message" required rows="5"
+                  placeholder="Write your message here..."
+                  style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc;"></textarea>
+      </div>
+
+      <div id="contactStatus" class="small" style="display:none;"></div>
+
+      <button type="submit" class="button" style="width: 180px; margin: 0 auto;">
+        Send Message
+      </button>
+    </form>
+  </div>
+</section>
+
+<!-- EmailJS Contact Form Script -->
+<!-- EmailJS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('contactForm');
+  const statusEl = document.getElementById('contactStatus');
+
+  emailjs.init({ publicKey: 'WYWVsQcBGt69SrK3u' });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    statusEl.style.display = 'block';
+    statusEl.style.color = '#555';
+    statusEl.textContent = 'Sending…';
+
+    const SERVICE_ID = 'service_wbxklc2';
+    const TEMPLATE_ID = 'contact_us';
+
+    const data = {
+      from_name: document.getElementById('cName').value.trim(),
+      from_email: document.getElementById('cEmail').value.trim(),
+      phone: document.getElementById('cPhone').value.trim(),
+      subject: document.getElementById('cSubject').value.trim(),
+      message: document.getElementById('cMessage').value.trim(),
+      page_url: window.location.href
+    };
+
+    try {
+      await emailjs.send(SERVICE_ID, TEMPLATE_ID, data);
+
+      statusEl.style.color = '#2a7a2a';
+      statusEl.textContent = 'Message sent! I’ll get back to you soon.';
+      form.reset();
+
+    } catch (err) {
+      statusEl.style.color = '#b33';
+      statusEl.textContent = 'Sorry — something went wrong. Please try again.';
+    }
+  });
+});
+</script>
+
 
   <div id="footer"></div>
 

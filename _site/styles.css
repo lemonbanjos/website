@@ -245,7 +245,7 @@ body{
 .site-footer{
   background:var(--green);
   color:var(--white);
-  margin-top:40px;
+  margin-top:0px;
 }
 
 .footer-inner{
@@ -1393,3 +1393,213 @@ body.modal-open{
 @media (max-width: 640px) {
   .blog-post-content p { text-indent: 0; }
 }
+
+/* ============================
+   CONTACT PAGE / FORM STYLES
+   ============================ */
+
+.contact-form {
+  margin-top: 24px;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.form-group {
+  flex: 1 1 220px;
+  min-width: 220px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+  color: var(--green-dark);
+}
+
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  padding: 10px 11px;
+  border-radius: 6px;
+  border: 1px solid #d1ccc2;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  background: #fff;
+  transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+}
+
+.contact-form textarea {
+  resize: vertical;
+  min-height: 140px;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 2px rgba(16,59,32,.18);
+  background: #fdfbf7;
+}
+
+.contact-form input::placeholder,
+.contact-form textarea::placeholder {
+  color: #999;
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* Button style for Send Message – matches .button / .btn-series vibe */
+.btn {
+  display: inline-block;
+  padding: 10px 18px;
+  border-radius: 6px;
+  border: 1px solid var(--green-dark);
+  background: var(--green);
+  color: var(--white);
+  font-family: var(--heading-font);
+  font-weight: 600;
+  letter-spacing: .3px;
+  font-size: 0.95rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .25s ease, transform .18s ease, box-shadow .18s ease;
+}
+
+.btn.primary {
+  /* same as base for now, but easy to tweak separately later */
+}
+
+.btn:hover,
+.btn:focus {
+  background: var(--green-dark);
+  box-shadow: 0 4px 12px rgba(0,0,0,.16);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.form-status {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+/* Small screen tweaks */
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+  }
+}
+
+/* Homepage-specific section backgrounds */
+.section-alt1 {
+  background: #f8f5ef; /* subtle warm off-white */
+}
+
+.section-alt2 {
+  background: #f4f1e9; /* slightly darker iteration */
+}
+
+.section-dark {
+  background: var(--green);
+  color: var(--white);
+}
+
+.section-gray {
+  background: #f0f0f0;
+}
+
+/* ------------ MOBILE GRID REPLACEMENT FOR HOME PAGE ------------ */
+.mobile-only { display: none; }
+.desktop-only { display: block; }
+
+@media (max-width: 768px) {
+
+  .desktop-only { display: none; }
+  .mobile-only  { display: grid; }
+
+  .home-mobile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .home-mobile-grid .card {
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .home-mobile-grid .card-img {
+    aspect-ratio: 2 / 5;     /* same ratio you use everywhere else */
+    object-fit: cover;
+    object-position: top;
+  }
+
+  .home-mobile-grid .card-body {
+    padding: 12px;
+    text-align: center;
+  }
+
+  .home-mobile-grid .card-title {
+    font-size: 1rem;
+  }
+}
+@media (max-width: 768px) {
+  .home-mobile-grid {
+    margin-bottom: 28px; /* adds breathing room above button */
+  }
+}
+/* Fade-in animation */
+@keyframes lbFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .home-mobile-grid .card {
+    opacity: 0;
+    animation: lbFadeUp .55s ease-out forwards;
+  }
+
+  /* Stagger for nicer appearance */
+  .home-mobile-grid a:nth-child(1) .card { animation-delay: .05s; }
+  .home-mobile-grid a:nth-child(2) .card { animation-delay: .12s; }
+  .home-mobile-grid a:nth-child(3) .card { animation-delay: .19s; }
+  .home-mobile-grid a:nth-child(4) .card { animation-delay: .26s; }
+}
+/* Make mobile dropdown menu span full width of the header */
+@media (max-width: 768px) {
+  /* Let the header be the positioning context, not the inner .container */
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 200;
+  }
+
+  .site-header .container {
+    position: static;   /* was relative earlier; this removes the side margins */
+  }
+}
+

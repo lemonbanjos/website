@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Contact • Lemon Banjos</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+</head>
+<body>
+  <div id="header"></div>
+
+  <section class="section">
+    <div class="container narrow">
+      <h1 class="section-title">Contact Lemon Banjos</h1>
+
+      <p class="text-center">
+        Whether you're interested in commissioning a new banjo, talking through options on an existing model,
+        or scheduling setup and repair work, I’d be glad to hear from you.<br><br>
+        You can use the form below, or reach out directly at:<br><br>
+        <strong>Hunter Lemon</strong><br>
+        Email: <a href="mailto:hunter@lemonbanjos.com">hunter@lemonbanjos.com</a><br>
+        Phone: <a href="tel:+13042660476">(304)-266-0476</a>
+      </p>
+
+      <!-- CONTACT FORM -->
+      <form id="contact-form" class="contact-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="from_name">Name</label>
+            <input type="text" id="from_name" name="from_name" required />
+          </div>
+          <div class="form-group">
+            <label for="from_email">Email</label>
+            <input type="email" id="from_email" name="from_email" required />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="phone">Phone (optional)</label>
+            <input type="tel" id="phone" name="phone" />
+          </div>
+          <div class="form-group">
+            <label for="subject">Subject</label>
+            <input type="text" id="subject" name="subject" placeholder="Custom build, setup/repair, etc." required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" rows="6" required
+            placeholder="Tell me a bit about what you’re looking for—tone, style, budget, or the work you need done."></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn primary">Send Message</button>
+          <span id="contact-status" class="form-status" aria-live="polite"></span>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <div id="footer"></div>
+
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+  <script>
+    function initHeaderFooter() {
+      return Promise.all([
+        fetch('header.html').then(r => r.text()).then(h => {
+          document.getElementById('header').innerHTML = h;
+        }),
+        fetch('footer.html').then(r => r.text()).then(f => {
+          document.getElementById('footer').innerHTML = f;
+        })
+      ]).then(() => {
+        const toggle = document.getElementById('menu-toggle');
+        const nav = document.getElementById('main-nav');
+        if (toggle && nav) {
+          toggle.addEventListener('click', () => {
+            const isOpen = nav.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+          });
+        }
+      });
+    }
+
+    initHeaderFooter().catch(console.error);
+
+    // EmailJS Contact Form Logic
+    document.addEventListener("DOMContentLoaded", () => {
+
+      const SERVICE_ID = "service_wbxklc2";
+      const TEMPLATE_ID = "contact_us";
+      const PUBLIC_KEY = "WYWVsQcBGt69SrK3u"; // same EmailJS key used site-wide
+
+      emailjs.init(PUBLIC_KEY);
+
+      const form = document.getElementById("contact-form");
+      const statusEl = document.getElementById("contact-status");
+
+      form.addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        statusEl.textContent = "Sending…";
+
+        const params = {
+          from_name: document.getElementById("from_name").value.trim(),
+          from_email: document.getElementById("from_email").value.trim(),
+          phone: document.getElementById("phone").value.trim(),
+          subject: document.getElementById("subject").value.trim(),
+          message: document.getElementById("message").value.trim(),
+          page_url: window.location.href
+        };
+
+        emailjs.send(SERVICE_ID, TEMPLATE_ID, params)
+          .then(() => {
+            statusEl.textContent = "Message sent! I'll get back to you soon.";
+            form.reset();
+          })
+          .catch((err) => {
+            console.error("EmailJS Error:", err);
+            statusEl.textContent = "Sorry, something went wrong. Try again or email me at hunter@lemonbanjos.com.";
+          });
+      });
+
+    });
+  </script>
+</body>
+</html>
