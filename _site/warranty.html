@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Warranty • Lemon Banjos</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+</head>
+<body>
+  <div id="header"></div>
+
+  <section class="section">
+    <div class="container narrow">
+      <h1 class="section-title">10-Year Limited Warranty</h1>
+
+      <p class="text-center">
+        Every Lemon Banjo is built by hand in Glenville, West Virginia, and I stand behind my work.
+        This page explains what is covered under the Lemon Banjos 10-year limited warranty, what is not covered,
+        and how to request service if you ever need it.
+      </p>
+
+      <h2>What This Warranty Covers</h2>
+      <p>
+        This warranty covers <strong>defects in my workmanship</strong> for a period of
+        <strong>ten (10) years</strong> from the original date of purchase.
+        It applies to all Lemon Banjos models in the Oldtime Series, Legacy Series, Master Series, and Custom Series.
+      </p>
+
+      <p>Examples of workmanship defects include:</p>
+      <ul>
+        <li>Neck construction issues (glue joints, fretboard adhesion, neck heel fit, truss-rod channel issues)</li>
+        <li>Rim construction problems (glue joints, delamination, structural wood defects)</li>
+        <li>Inlays lifting or failing due to improper adhesion</li>
+        <li>Binding separation caused by improper installation</li>
+        <li>Finish problems that clearly result from improper application</li>
+      </ul>
+
+      <p>
+        If a covered workmanship defect appears during the warranty period, I will—at my discretion—repair the
+        instrument at no charge using new or repaired parts.
+      </p>
+
+      <h2>What This Warranty Does Not Cover</h2>
+      <p>This warranty does <strong>not</strong> cover:</p>
+
+      <h3>Normal wear, setup, and subjective factors</h3>
+      <ul>
+        <li>Tone, volume, or personal setup preferences</li>
+        <li>String height, bridge selection, head tension, or action adjustments</li>
+        <li>Normal fret wear</li>
+        <li>Worn, scratched, or dulled finishes from everyday play</li>
+        <li>Tarnishing, patina, or aging of metal hardware</li>
+      </ul>
+
+      <h3>Damage from misuse or environment</h3>
+      <ul>
+        <li>Drops, impacts, or improper handling</li>
+        <li>Exposure to high or low humidity, heat, cold, or rapid climate changes</li>
+        <li>Improper storage or transport</li>
+        <li>Water damage, mold, corrosion, or other environmental issues</li>
+      </ul>
+
+      <h3>Hardware and components not made by me</h3>
+      <p>
+        Many components on a banjo come from reputable outside manufacturers. These parts are
+        <strong>not</strong> covered under the Lemon Banjos warranty, including (but not limited to):
+      </p>
+      <ul>
+        <li>Tuning machines</li>
+        <li>Tension hoop, hooks, and nuts</li>
+        <li>Flange and tone ring</li>
+        <li>Armrest and tailpiece</li>
+        <li>Coordinator rods and resonator hardware</li>
+        <li>Banjo head and bridge</li>
+        <li>Truss rod hardware (if purchased rather than custom-made)</li>
+      </ul>
+
+      <p>
+        While the parts themselves aren’t covered, I’m usually happy to help recommend or install a replacement
+        if something goes wrong.
+      </p>
+
+      <h3>Modifications or unauthorized repairs</h3>
+      <ul>
+        <li>Any repair, modification, or alteration performed by someone else</li>
+        <li>Damage caused by improper repair or incorrect setup by a third party</li>
+      </ul>
+
+      <p>
+        Any of the above may void the warranty if they affect the structure or stability of the instrument.
+      </p>
+
+      <h2>Warranty Term</h2>
+      <ul>
+        <li>The warranty period is <strong>10 years</strong> from the original purchase date.</li>
+        <li>The warranty applies to the <strong>original owner</strong>.</li>
+        <li>
+          The warranty does <strong>not</strong> automatically transfer if the banjo is sold. A second owner must
+          contact me to discuss re-registering and any remaining coverage.
+        </li>
+      </ul>
+
+      <h2>What I Will Do</h2>
+      <p>
+        For a valid workmanship defect, I will repair the instrument at no charge for labor and for any
+        parts I manufacture.
+      </p>
+      <p>
+        In most cases, the customer is responsible for safe packing and shipping the instrument
+        <strong>to</strong> Lemon Banjos. I will cover return shipping <strong>back to you</strong>
+        once the repair is complete, unless we agree otherwise.
+      </p>
+
+      <h2>How to Request Warranty Service</h2>
+      <p>If you believe you have a warranty issue, please email me:</p>
+
+      <p>
+        <strong>Hunter Lemon</strong><br>
+        Email: <a href="mailto:hunter@lemonbanjos.com">hunter@lemonbanjos.com</a><br>
+        Phone: <a href="tel:+13042660476">(304) 266-0476</a>
+      </p>
+
+      <p>Include the following in your email:</p>
+      <ul>
+        <li>Your name and contact information</li>
+        <li>The model and (if applicable) serial number</li>
+        <li>Date and place of purchase</li>
+        <li>A clear description of the issue</li>
+        <li>Several clear, well-lit photos of the affected area</li>
+      </ul>
+
+      <p>
+        Once I review the information, I’ll let you know the next steps and whether the issue appears to fall
+        under this warranty.
+      </p>
+
+      <p class="small">
+        This Limited Warranty gives you specific legal rights. You may also have other rights depending on
+        your state or country. If you’re ever unsure about coverage, please feel free to contact me.
+      </p>
+    </div>
+  </section>
+
+  <div id="footer"></div>
+
+  <script>
+    function initHeaderFooter() {
+      return Promise.all([
+        fetch('header.html').then(r => r.text()).then(h => {
+          document.getElementById('header').innerHTML = h;
+        }),
+        fetch('footer.html').then(r => r.text()).then(f => {
+          document.getElementById('footer').innerHTML = f;
+        })
+      ]).then(() => {
+        const toggle = document.getElementById('menu-toggle');
+        const nav = document.getElementById('main-nav');
+        if (toggle && nav) {
+          toggle.addEventListener('click', () => {
+            const isOpen = nav.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+          });
+        }
+      });
+    }
+
+    initHeaderFooter().catch(console.error);
+  </script>
+</body>
+</html>

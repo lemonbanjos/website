@@ -13,7 +13,7 @@ title: "Lemon Banjo Blog"
       {% for post in site.posts %}
         <li class="blog-item">
           <h2>
-            <a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a>
+            <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
           </h2>
 
           <p class="blog-meta">
@@ -23,7 +23,8 @@ title: "Lemon Banjo Blog"
           {% assign preview = post.content | strip_html | truncatewords: 60 %}
           <p>{{ preview }}</p>
 
-          <p><a href="{{ post.url }}">Read More →</a></p>
+          <p><a href="{{ post.url | relative_url }}">Read More →</a></p>
+
         </li>
       {% endfor %}
     </ul>

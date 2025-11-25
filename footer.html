@@ -1,8 +1,54 @@
 <footer class="site-footer">
   <div class="container footer-inner">
-    <p>© <span id="year"></span> Lemon Banjos • Glenville, West Virginia</p>
+
+    <div class="footer-columns-3">
+
+      <!-- Column 1: Contact -->
+<div class="footer-col">
+  <h3 class="footer-title">Lemon Banjos</h3>
+  <p class="footer-text">Hand-built in Glenville, West Virginia</p>
+
+  <div class="footer-contact-group">
+    <p class="footer-text">Hunter Lemon</p>
+    <p class="footer-text">
+      <a href="mailto:hunter@lemonbanjos.com" class="footer-link">hunter@lemonbanjos.com</a><br>
+      <a href="tel:13042660476" class="footer-link">(304) 266-0476</a>
+    </p>
+  </div>
+</div>
+
+      <!-- Column 2: Explore -->
+      <div class="footer-col">
+        <h3 class="footer-title">Explore</h3>
+        <ul class="footer-links">
+		  <li><a href="/website/index.html" class="footer-link">Home</a></li>
+          <li><a href="/website/standardBanjos.html" class="footer-link">Lemon Banjos</a></li>
+          <li><a href="/website/videos.html" class="footer-link">Hear Lemon Banjos</a></li>
+		  <li><a href="/website/setupRepairs.html" class="footer-link" hidden>Setup / Repairs</a></li>
+          <li><a href="/website/about.html" class="footer-link">About</a></li>
+          <li><a href="/website/blog/index.html" class="footer-link">Blog</a></li>
+          <li><a href="/website/contact.html" class="footer-link">Contact</a></li>
+        </ul>
+      </div>
+
+      <!-- Column 3: Legal -->
+      <div class="footer-col">
+        <h3 class="footer-title">Legal</h3>
+        <ul class="footer-links">
+          <li><a href="/website/warranty.html" class="footer-link">Warranty</a></li>
+          <li><a href="/website/privacy.html" class="footer-link">Privacy Policy</a></li>
+          <li><a href="/website/terms.html" class="footer-link">Terms & Conditions</a></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <p class="small footer-copy">
+      © <span id="year"></span> Lemon Banjos • Glenville, West Virginia
+    </p>
   </div>
 </footer>
+
 <script>
   document.getElementById('year').textContent = new Date().getFullYear();
 </script>

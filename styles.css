@@ -1603,3 +1603,178 @@ body.modal-open{
   }
 }
 
+/* Footer layout */
+.footer-columns {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.footer-col {
+  min-width: 200px;
+}
+
+.footer-title {
+  font-family: var(--heading-font);
+  font-size: 18px;
+  margin: 0 0 6px;
+  color: var(--white);
+}
+
+.footer-text {
+  margin: 0 0 8px;
+  color: var(--white);
+  opacity: 0.9;
+  font-size: 15px;
+}
+
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-links li {
+  margin-bottom: 6px;
+}
+
+.footer-link {
+  color: var(--white);
+  text-decoration: none;
+  opacity: 0.9;
+}
+
+.footer-link:hover,
+.footer-link:focus {
+  text-decoration: underline;
+  opacity: 1;
+}
+
+/* Mobile: stack columns */
+@media (max-width: 600px) {
+  .footer-columns {
+    flex-direction: column;
+    gap: 24px;
+    text-align: center;
+  }
+
+  .footer-col {
+    min-width: 100%;
+  }
+}
+
+/* Tighter footer layout on desktop */
+@media (min-width: 900px) {
+  .footer-columns {
+    max-width: 700px;   /* controls how tight the footer looks */
+    margin: 0 auto;     /* centers the two columns */
+    justify-content: space-around; /* small gap instead of huge push */
+  }
+}
+
+/* ==========================
+   3-Column Footer Layout
+   ========================== */
+
+.footer-columns-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+  margin-bottom: 24px;
+  justify-items: start;
+}
+
+.footer-col {
+  max-width: 300px;
+}
+
+.footer-title {
+  font-family: var(--heading-font);
+  margin-bottom: 6px;
+  font-size: 1.1rem;
+}
+
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-links li {
+  margin-bottom: 4px;
+}
+
+.footer-link {
+  color: var(--white);
+  text-decoration: none;
+  opacity: .95;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
+}
+
+.footer-copy {
+  text-align: center;
+  margin-top: 10px !important;
+  opacity: .85;
+}
+
+/* Mobile / small screens */
+@media (max-width: 750px) {
+  .footer-columns-3 {
+    grid-template-columns: 1fr;
+    gap: 22px;
+    text-align: left;
+  }
+}
+
+/* Center footer columns on desktop */
+.footer-columns-3 {
+  justify-items: center;   /* centers each column */
+  text-align: center;      /* centers text inside each column */
+}
+
+/* Keep mobile layout left-aligned for readability */
+@media (max-width: 750px) {
+  .footer-columns-3 {
+    justify-items: start;
+    text-align: left;
+  }
+}
+
+figure.about-photo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 32px auto;
+  width: fit-content;
+  max-width: 100%;
+}
+
+figure.about-photo img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px; /* optional */
+}
+
+figure.about-photo figcaption {
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
+  margin-top: 8px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.footer-contact-group {
+  margin-top: 4px; /* small space above the group */
+}
+
+.footer-contact-group .footer-text {
+  margin: 2px 0; /* tight spacing */
+}
+
