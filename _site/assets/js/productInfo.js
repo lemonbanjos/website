@@ -1,16 +1,5 @@
 // =======================================================
 //  Lemon Banjo Product Info (Google Sheets Driven)
-//  - Uses ?key=LEGACY35-LB-3 from URL
-//  - Products sheet: A:key, B:title, C:series, D:base_price,
-//                    E:sale_price, F:sale_label, G:sale_active, H:image_count
-//  - Options sheet:  A:key, B:group, C:option_name, D:price_delta,
-//                    E:price_type ("flat" or "percent"), F:is_default (TRUE/FALSE),
-//                    G:sort, H:visible (TRUE/FALSE), I:dep_group, J:dep_value
-//  - Specs sheet:    A:key, B:section, C:label, D:value, E:sort
-//  - Builds options with dependencies + defaults
-//  - Re-calculates regular + sale price on changes
-//  - Builds image gallery from numbered images (1.webp, 2.webp, ...)
-//  - Exposes window.LemonBanjo.getConfig() for EmailJS
 // =======================================================
 
 const SHEET_ID = '1JaKOJLDKDgEvIg54UKKg2J3fftwOsZlKBw1j5qjeheU';
@@ -242,8 +231,6 @@ function renderHeader(product) {
   }
 }
 
-// ---------- RENDER OPTIONS UI ----------
-
 // ---------- RENDER OPTIONS UI (ALL AS DROPDOWNS) ----------
 
 function renderOptions(optionsByCanon, groupNameMap) {
@@ -330,9 +317,36 @@ function renderOptions(optionsByCanon, groupNameMap) {
       recalcPrice();
       updateEmailConfig();
       updateOptionVisibility();
+      setupNameBlockUI();              // *** NAME BLOCK: keep textbox in sync
     });
 
     block.appendChild(select);
+
+    // *** NAME BLOCK: add custom-text input inside the Name Block option block
+    if (displayName.toLowerCase() === 'name block') {
+      const wrapper = document.createElement('div');
+      wrapper.id = 'nameBlockWrapper';
+      wrapper.style.display = 'none';
+      wrapper.style.marginTop = '0.35rem';
+
+      const lbl = document.createElement('p');
+      lbl.className = 'small';
+      lbl.textContent = 'Custom name block text';
+      wrapper.appendChild(lbl);
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.id = 'nameBlockCustomInput';
+      input.maxLength = 20;
+      input.placeholder = 'Enter custom name (max 20)';
+      input.className = 'option-select';
+      input.style.width = '100%';
+
+      wrapper.appendChild(input);
+      block.appendChild(wrapper);
+    }
+    // *** END NAME BLOCK UI ***
+
     container.appendChild(block);
   });
 
@@ -340,11 +354,8 @@ function renderOptions(optionsByCanon, groupNameMap) {
   updateOptionVisibility();
   recalcPrice();
   updateEmailConfig();
+  setupNameBlockUI();          // *** NAME BLOCK: initial state
 }
-
-
-
-// ---------- OPTION VISIBILITY (DEPENDENCIES) ----------
 
 // ---------- OPTION VISIBILITY (DEPENDENCIES) ----------
 
@@ -439,8 +450,9 @@ function updateOptionVisibility() {
     recalcPrice();
     updateEmailConfig();
   }
-}
 
+  setupNameBlockUI();      // *** NAME BLOCK: respond to visibility changes
+}
 
 // ---------- PRICE CALCULATION ----------
 
@@ -490,10 +502,10 @@ function recalcPrice() {
       priceEl.textContent = fmtUSD(totalRegular);
     }
     priceEl.dataset.base = totalRegular.toString();
-	const basePriceEl = document.getElementById('productBasePrice');
-if (basePriceEl) {
-    basePriceEl.textContent = `Base price: ${fmtUSD(Number(p.base_price || 0))}`;
-}
+    const basePriceEl = document.getElementById('productBasePrice');
+    if (basePriceEl) {
+      basePriceEl.textContent = `Base price: ${fmtUSD(Number(p.base_price || 0))}`;
+    }
   }
 
   const priceBlock = document.querySelector('.product-price-block');
@@ -547,7 +559,7 @@ function renderSpecs(specs) {
 }
 
 // ---------- GALLERY (numbered images + lightbox) ----------
-
+// (unchanged from your original)
 function setupGallery(product) {
   const imageCount = Number(product.image_count || 0) || 1;
   const baseFolder = getImageBaseFolder(product.model_id);
@@ -568,7 +580,7 @@ function setupGallery(product) {
     const img = document.createElement('img');
     img.src = thumb;
     img.dataset.large = large;
-    img.dataset.lightboxLarge = lightboxSrc;    // <-- NEW
+    img.dataset.lightboxLarge = lightboxSrc;
     img.className = 'thumbnail';
     img.alt = `${product.title || 'Banjo'} view ${i}`;
     img.setAttribute('role', 'listitem');
@@ -581,7 +593,7 @@ function setupGallery(product) {
       img.classList.add('active');
       mainImg.src = large;
       mainImg.dataset.large = large;
-      mainImg.dataset.lightboxLarge = lightboxSrc;   // <-- NEW
+      mainImg.dataset.lightboxLarge = lightboxSrc;
     });
 
     img.addEventListener('keydown', e => {
@@ -594,7 +606,7 @@ function setupGallery(product) {
     thumbRail.appendChild(img);
 
     galleryImages.push(large);
-    lightboxImages.push(lightboxSrc);   // <-- NEW ARRAY
+    lightboxImages.push(lightboxSrc);
   }
 
   // Set main image from #1
@@ -652,6 +664,52 @@ function setupGallery(product) {
   });
 }
 
+// ---------- NAME BLOCK CUSTOM UI (NEW) ----------
+
+function setupNameBlockUI() {
+  const wrapper = document.getElementById('nameBlockWrapper');
+  const input = document.getElementById('nameBlockCustomInput');
+  if (!wrapper || !input) return;
+
+  const { optionsByCanon, selected } = LemonState;
+
+  if (!optionsByCanon) {
+    wrapper.style.display = 'none';
+    input.disabled = true;
+    input.value = '';
+    return;
+  }
+
+  const groupCanon = canon('Name Block');
+  const opts = optionsByCanon[groupCanon];
+
+  if (!opts || !opts.length) {
+    wrapper.style.display = 'none';
+    input.disabled = true;
+    input.value = '';
+    return;
+  }
+
+  const chosen = selected && selected[groupCanon];
+  const isCustom = chosen && chosen.toLowerCase().startsWith('custom');
+
+  if (isCustom) {
+    wrapper.style.display = '';
+    input.disabled = false;
+  } else {
+    wrapper.style.display = 'none';
+    input.disabled = true;
+    input.value = '';
+  }
+
+  if (!input.dataset.lbBound) {
+    const max = parseInt(input.getAttribute('maxlength') || '20', 10);
+    input.addEventListener('input', () => {
+      if (input.value.length > max) input.value = input.value.slice(0, max);
+    });
+    input.dataset.lbBound = '1';
+  }
+}
 
 // ---------- EMAIL CONFIG ----------
 
@@ -670,7 +728,22 @@ function updateEmailConfig() {
     if (!val) return;
     const displayGroup =
       (groupNameMap && groupNameMap[canonKey]) || canonKey;
-    selections[displayGroup] = val;
+
+    let displayVal = val;
+
+    // *** NAME BLOCK: append custom text when Custom is chosen
+    if (displayGroup && displayGroup.toLowerCase() === 'name block') {
+      const input = document.getElementById('nameBlockCustomInput');
+      const customText = cleanStr(input?.value || '');
+      if (val.toLowerCase().startsWith('custom')) {
+        displayVal = customText
+          ? `${val} ("${customText}")`
+          : `${val} (no text entered)`;
+      }
+    }
+    // *** END NAME BLOCK ***
+
+    selections[displayGroup] = displayVal;
   });
 
   const finalPriceNum = (() => {

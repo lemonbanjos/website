@@ -1809,3 +1809,86 @@ figure.about-photo figcaption {
   display: block;
 }
 
+/* Comments field styling */
+.lb-comments-group {
+  margin-top: 1rem;
+}
+
+.lb-comments-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 0.95rem;
+}
+
+/* Comments textarea – match other inputs */
+#custComments {
+  width: 100%;
+  min-height: 120px;
+  padding: 0.7rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid #3a3a3a;
+  background: #111;           /* dark like the other fields */
+  color: #f5f5f5;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+#custComments::placeholder {
+  color: #9b9b9b;
+}
+
+#custComments:focus {
+  border-color: #10533F;      /* same green as your button */
+  background: #151515;
+  outline: none;
+}
+
+
+/* Make the comments row stack and span full width */
+.lb-row.comments-row {
+  margin-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+/* In-stock detail layout: gallery left, everything else stacked on the right */
+.product-grid.instock-layout {
+  grid-template-columns: 60% 40%;
+  grid-template-areas: "gallery sidebar";
+  column-gap: 48px;
+  row-gap: 0; /* we handle vertical spacing with flex inside .product-right */
+}
+
+/* Hook the gallery into the grid area */
+.product-grid.instock-layout .product-gallery {
+  grid-area: gallery;
+}
+
+/* Right column: stack header, price, button, description with tight spacing */
+.product-grid.instock-layout .product-right {
+  grid-area: sidebar;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;           /* vertical spacing between header, price, and details */
+}
+
+/* Make the Ask button not sit miles away from the price */
+.product-grid.instock-layout .product-details {
+  margin-top: 0;
+}
+
+/* On mobile, just stack everything normally (ignore grid for this layout) */
+@media (max-width: 700px) {
+  .product-grid.instock-layout {
+    display: block;  /* stops using the grid template for this layout */
+  }
+
+  .product-grid.instock-layout .product-gallery {
+    margin-top: 12px;
+    margin-bottom: 12px;
+  }
+}

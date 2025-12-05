@@ -22,42 +22,43 @@
   </script>
 </head>
 
-<body>
+<body class="instock-detail">
   <div id="header"></div>
 
-  <section class="product">
-    <div class="container">
-      <div class="product-grid">
-        <!-- Gallery (same structure as banjo.html; JS will fill images from image_folder) -->
-        <div class="product-gallery">
-          <div class="thumb-rail" role="list" id="thumbRail">
-            <!-- Thumbnails are generated dynamically by instockInfo.js -->
-          </div>
-
-          <div class="main-image-wrapper">
-            <img alt="Banjo — front" class="main-image" id="mainImage">
-          </div>
+<section class="product">
+  <div class="container">
+    <div class="product-grid instock-layout">
+      <!-- Gallery -->
+      <div class="product-gallery">
+        <div class="thumb-rail" role="list" id="thumbRail">
+          <!-- Thumbnails are generated dynamically by instockInfo.js -->
         </div>
 
-        <!-- Header (brand/series + title) -->
+        <div class="main-image-wrapper">
+          <img alt="Banjo — front" class="main-image" id="mainImage">
+        </div>
+      </div>
+
+      <!-- Right-hand column (header + price + details stacked) -->
+      <div class="product-right">
         <div class="product-header-block">
           <p id="seriesText">In-Stock Banjo</p>
           <h1 class="product-title" id="productTitle">Loading…</h1>
         </div>
 
-        <!-- Price block (instockInfo.js will inject strike + red sale price + sale pill) -->
         <div class="product-price-block">
           <h2><em id="productPrice" aria-live="polite">Loading…</em></h2>
         </div>
 
-        <!-- No options for in-stock items; just Ask button + description -->
         <div class="product-details">
           <button class="button" id="askBtn" type="button">Ask About This Banjo</button>
           <div class="product-description" id="productDescription"></div>
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
+
 
   <!-- Specs grid (same ID as banjo.html so styles match) -->
   <section class="specs-section">
@@ -125,12 +126,23 @@
           <div></div>
         </div>
 
+        <!-- COMMENTS row (same concept as main banjo page) -->
+        <div class="lb-row comments-row">
+          <div class="lb-comments-group">
+            <label for="custComments">Comments</label>
+            <textarea id="custComments" name="custComments"
+              placeholder="Anything else you'd like me to know"></textarea>
+          </div>
+        </div>
+        <!-- END COMMENTS -->
+
         <div id="emailStatus" class="lb-status"></div>
 
-        <div class="lb-actions">
-          <button type="button" id="cancelEmail" class="button-secondary">Cancel</button>
-          <button type="submit" class="button">Send</button>
-        </div>
+<div class="lb-actions">
+  <button type="button" class="lb-btn" id="cancelEmail">Cancel</button>
+  <button type="submit" class="lb-btn primary" id="sendEmail">Send</button>
+</div>
+
       </form>
     </div>
   </div>
@@ -180,7 +192,7 @@
 
       function setDisabled(disabled) {
         form.classList.toggle('lb-disabled', disabled);
-        form.querySelectorAll('input,button').forEach(el => {
+        form.querySelectorAll('input,button,textarea').forEach(el => {
           if (el.id !== 'cancelEmail') el.disabled = disabled;
         });
       }
@@ -214,13 +226,14 @@
         statusEl.innerHTML = '';
         setDisabled(true);
 
-        const custName    = document.getElementById('custName');
-        const custEmail   = document.getElementById('custEmail');
-        const custPhone   = document.getElementById('custPhone');
-        const custAddress = document.getElementById('custAddress');
-        const custCity    = document.getElementById('custCity');
-        const custState   = document.getElementById('custState');
-        const custZip     = document.getElementById('custZip');
+        const custName      = document.getElementById('custName');
+        const custEmail     = document.getElementById('custEmail');
+        const custPhone     = document.getElementById('custPhone');
+        const custAddress   = document.getElementById('custAddress');
+        const custCity      = document.getElementById('custCity');
+        const custState     = document.getElementById('custState');
+        const custZip       = document.getElementById('custZip');
+        const custComments  = document.getElementById('custComments'); // NEW
 
         if (!custName.value.trim() || !custEmail.value.trim()) {
           statusEl.innerHTML = `<div class="lb-status error">Name and email are required.</div>`;
@@ -245,6 +258,7 @@
             city:        custCity.value.trim(),
             state:       custState.value.trim(),
             zip:         custZip.value.trim(),
+            comments:    (custComments.value || '').trim(),   // NEW
             model:       cfg.model,
             series:      cfg.series || '',
             base_price:  priceEl.dataset.base || '',

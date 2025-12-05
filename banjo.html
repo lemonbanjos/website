@@ -45,8 +45,7 @@
         </div>
 
         <div class="product-price-block">
-		<p id="productBasePrice" style="font-size: 0.85rem; opacity: 0.65; margin-bottom: -4px;"></p>
-
+          <p id="productBasePrice" style="font-size: 0.85rem; opacity: 0.65; margin-bottom: -4px;"></p>
           <h2><em id="productPrice" aria-live="polite">Loading…</em></h2>
         </div>
 
@@ -123,6 +122,16 @@
             <input id="custZip" name="custZip" type="text" placeholder="ZIP Code">
           </div>
         </div>
+
+        <!-- NEW: comments textarea -->
+        <div class="lb-row comments-row">
+  <div class="lb-comments-group">
+    <label for="custComments">Comments</label>
+    <textarea id="custComments" name="custComments" placeholder="Anything else you'd like me to know"></textarea>
+  </div>
+</div>
+
+        <!-- END NEW -->
 
         <div id="emailStatus" class="lb-note lb-hidden" aria-live="polite"></div>
 
@@ -225,7 +234,7 @@
 
       function setDisabled(disabled) {
         form.classList.toggle('lb-disabled', disabled);
-        form.querySelectorAll('input,button').forEach(el => {
+        form.querySelectorAll('input,button,textarea').forEach(el => {
           if (el.id !== 'cancelEmail') el.disabled = disabled;
         });
       }
@@ -240,7 +249,21 @@
           const group = block.querySelector('p')?.textContent.trim();
           const sel = block.querySelector('select');
           if (sel) {
-            const opt = sel.options[sel.selectedIndex].textContent.replace(/\(\+.*\)$/,'').trim();
+            let opt = sel.options[sel.selectedIndex].textContent
+              .replace(/\(\+.*\)$/,'')
+              .trim();
+
+            // Name Block: include custom text when Custom is selected
+            if (group && group.toLowerCase() === 'name block') {
+              const input = document.getElementById('nameBlockCustomInput');
+              const customText = (input?.value || '').trim();
+              if (opt.toLowerCase().startsWith('custom')) {
+                opt = customText
+                  ? `${opt} ("${customText}")`
+                  : `${opt} (no text entered)`;
+              }
+            }
+
             out.push([group, opt]);
             return;
           }
@@ -275,6 +298,7 @@
             city:       custCity.value.trim(),
             state:      custState.value.trim(),
             zip:        custZip.value.trim(),
+            comments:   (custComments.value || '').trim(),   // NEW
             model:      cfg.model,
             series:     cfg.series || '',
             base_price: priceEl.dataset.base || '',
@@ -288,7 +312,7 @@
 
           statusEl.innerHTML = `<div class="lb-status success">
             <span class="check"></span>
-            <span>Sent! I’ll get back to you soon.</span>
+            <span>Thanks! I’ve received your info and will be in touch soon.</span>
           </div>`;
 
           setTimeout(() => {
