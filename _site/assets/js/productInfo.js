@@ -253,8 +253,10 @@ function renderOptions(optionsByCanon, groupNameMap) {
   container.innerHTML = '';
   LemonState.selected = LemonState.selected || {};
 
- const entries = Object.entries(optionsByCanon); // keep sheet order
+  const p = LemonState.product || {};
+  const baseRegular = Number(p.base_price || 0);
 
+  const entries = Object.entries(optionsByCanon); // keep sheet order
 
   entries.forEach(([groupCanon, options]) => {
     if (!options || !options.length) return;
@@ -273,16 +275,35 @@ function renderOptions(optionsByCanon, groupNameMap) {
     select.className = 'option-select';
     select.dataset.groupCanon = groupCanon;
 
-    // Build <option> tags in the same order as options[]
     let defaultName = null;
 
     options.forEach((opt, idx) => {
       const optEl = document.createElement('option');
       optEl.value = opt.option_name;
-      optEl.textContent = opt.option_name;
 
-      // We don't hide anything here; dependencies/visibility are handled
-      // later in updateOptionVisibility(), which uses the same index.
+      // ---- BUILD LABEL WITH PRICE DELTA ----
+      const delta = Number(opt.price_delta || 0);
+      let suffix = '';
+
+      if (opt.price_type === 'percent') {
+        if (delta !== 0) {
+          const sign = delta > 0 ? '+' : '';
+          suffix = ` (${sign}${delta}%)`;
+        }
+      } else {
+        if (delta !== 0) {
+          const abs = Math.abs(delta);
+          const formatted = fmtUSD(abs); // e.g. $150.00
+          const sign = delta > 0 ? '+' : '-';
+          suffix = ` (${sign}${formatted.replace('$', '$')})`;
+        } else {
+          // Optional: mark included options
+          // suffix = ' (Included)';
+        }
+      }
+
+      optEl.textContent = opt.option_name + suffix;
+
       if (opt.is_default && !defaultName) {
         defaultName = opt.option_name;
       }
@@ -322,6 +343,9 @@ function renderOptions(optionsByCanon, groupNameMap) {
 }
 
 
+
+// ---------- OPTION VISIBILITY (DEPENDENCIES) ----------
+
 // ---------- OPTION VISIBILITY (DEPENDENCIES) ----------
 
 function updateOptionVisibility() {
@@ -329,6 +353,8 @@ function updateOptionVisibility() {
   const { optionsByCanon, selected } = state;
 
   if (!optionsByCanon) return;
+
+  let changedSelection = false;
 
   Object.entries(optionsByCanon).forEach(([groupCanon, opts]) => {
     const block = document.querySelector(`.option-block[data-group-canon="${groupCanon}"]`);
@@ -339,6 +365,7 @@ function updateOptionVisibility() {
     const radios = block.querySelectorAll('input[type="radio"]');
     const select = block.querySelector('select');
 
+    // First pass: apply visibility to each option
     opts.forEach((opt, idx) => {
       let show = opt.visible;
 
@@ -354,6 +381,7 @@ function updateOptionVisibility() {
           radio.parentElement.style.display = show ? '' : 'none';
           if (!show && radio.checked) {
             radio.checked = false;
+            changedSelection = true;
           }
         }
       } else if (select) {
@@ -367,8 +395,52 @@ function updateOptionVisibility() {
     });
 
     block.style.display = anyVisible ? '' : 'none';
+
+    // Second pass: for <select>, if current selection is now hidden/invalid, pick a visible default
+    if (select) {
+      const currentVal = selected[groupCanon];
+      const visibleIndices = [];
+      for (let i = 0; i < select.options.length; i++) {
+        if (!select.options[i].hidden) visibleIndices.push(i);
+      }
+
+      if (!visibleIndices.length) {
+        // nothing visible, clear selection for this group
+        if (selected[groupCanon]) {
+          delete selected[groupCanon];
+          changedSelection = true;
+        }
+        return;
+      }
+
+      const visibleOpts = visibleIndices.map(i => ({
+        opt: opts[i],
+        optEl: select.options[i]
+      }));
+
+      const stillVisible = visibleOpts.some(v => v.opt.option_name === currentVal);
+
+      if (!stillVisible) {
+        // Prefer a visible default if one exists
+        let newChoice = visibleOpts.find(v => v.opt.is_default);
+        if (!newChoice) newChoice = visibleOpts[0];
+
+        if (newChoice) {
+          select.value = newChoice.opt.option_name;
+          selected[groupCanon] = newChoice.opt.option_name;
+          changedSelection = true;
+        }
+      }
+    }
   });
+
+  // If any selection changed because of visibility/dependencies, recalc price once
+  if (changedSelection) {
+    recalcPrice();
+    updateEmailConfig();
+  }
 }
+
 
 // ---------- PRICE CALCULATION ----------
 
@@ -418,6 +490,10 @@ function recalcPrice() {
       priceEl.textContent = fmtUSD(totalRegular);
     }
     priceEl.dataset.base = totalRegular.toString();
+	const basePriceEl = document.getElementById('productBasePrice');
+if (basePriceEl) {
+    basePriceEl.textContent = `Base price: ${fmtUSD(Number(p.base_price || 0))}`;
+}
   }
 
   const priceBlock = document.querySelector('.product-price-block');
