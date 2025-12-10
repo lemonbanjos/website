@@ -48,7 +48,7 @@ async function gvizQuery(sheet, tq) {
 
 const LemonState = {
   model: MODEL,          // e.g. "LEGACY35-LB-3"
-  product: null,         // { model_id, title, series, base_price, sale_price, sale_label, sale_active, image_count }
+  product: null,         // { model_id, title, series, base_price, sale_price, sale_label, sale_active, image_count, video_url }
   optionsByCanon: null,  // { groupCanon: [option, ...] }
   groupNameMap: null,    // { groupCanon: displayName }
   selected: {},          // { groupCanon: option_name }
@@ -92,14 +92,26 @@ async function loadData(modelKey) {
   const key = modelKey || MODEL;
 
   const [prodT, optT, specT] = await Promise.all([
-    gvizQuery('Products', `select A,B,C,D,E,F,G,H where A='${key}'`),
+    // NOTE: now also selecting I (video URL)
+    gvizQuery('Products', `select A,B,C,D,E,F,G,H,I where A='${key}'`),
     gvizQuery('Options',  `select B,C,D,E,F,G,H,I,J where A='${key}'`),
     gvizQuery('Specs',    `select B,C,D,E where A='${key}' order by B asc, E asc`)
   ]);
 
   // ---------- Product ----------
   const prodRow = rows(prodT)[0] || [];
-  const [pKey, pTitle, pSeries, pBase, pSale, pSaleLabel, pSaleActive, pImageCount] = prodRow;
+  // [key, title, series, base, sale, saleLabel, saleActive, imageCount, videoUrl]
+  const [
+    pKey,
+    pTitle,
+    pSeries,
+    pBase,
+    pSale,
+    pSaleLabel,
+    pSaleActive,
+    pImageCount,
+    pVideoUrl
+  ] = prodRow;
 
   if (!pKey) {
     console.error('No product row found for key', key);
@@ -117,6 +129,7 @@ async function loadData(modelKey) {
     ) && sale_price > 0;
 
   const image_count = Number(pImageCount || 0) || 1;
+  const video_url = cleanStr(pVideoUrl); // may be empty
 
   const product = {
     model_id: cleanStr(pKey),
@@ -126,7 +139,8 @@ async function loadData(modelKey) {
     sale_price,
     sale_label: cleanStr(pSaleLabel),
     sale_active,
-    image_count
+    image_count,
+    video_url
   };
 
   // ---------- Options ----------
@@ -426,7 +440,7 @@ function updateOptionVisibility() {
 
       const visibleOpts = visibleIndices.map(i => ({
         opt: opts[i],
-        optEl: select.options[i]
+      optEl: select.options[i]
       }));
 
       const stillVisible = visibleOpts.some(v => v.opt.option_name === currentVal);
@@ -556,6 +570,68 @@ function renderSpecs(specs) {
     `;
     grid.appendChild(card);
   });
+}
+
+// ---------- VIDEO RENDER (NEW) ----------
+
+function normalizeVideoUrl(raw) {
+  const url = cleanStr(raw);
+  if (!url) return '';
+
+  // If it already looks like an embed, just use it
+  if (url.includes('/embed/')) return url;
+
+  // YouTube watch URL -> embed
+  if (url.includes('youtube.com/watch')) {
+    try {
+      const u = new URL(url);
+      const v = u.searchParams.get('v');
+      if (v) {
+        return `https://www.youtube.com/embed/${v}`;
+      }
+    } catch (e) {
+      // fall through
+    }
+  }
+
+  // youtu.be short link -> embed
+  if (url.includes('youtu.be/')) {
+    try {
+      const u = new URL(url);
+      const id = u.pathname.replace('/', '');
+      if (id) {
+        return `https://www.youtube.com/embed/${id}`;
+      }
+    } catch (e) {
+      // fall through
+    }
+  }
+
+  // Otherwise, just return what we were given
+  return url;
+}
+
+function renderVideo(product) {
+  const section = document.getElementById('videoSection');
+  const iframe = document.getElementById('productVideo');
+  const fallback = document.getElementById('videoFallback');
+
+  if (!section || !iframe) return;
+
+  const raw = product.video_url || '';
+  const embed = normalizeVideoUrl(raw);
+
+  if (embed) {
+    iframe.src = embed;
+    section.style.display = '';
+    if (fallback) fallback.style.display = 'none';
+  } else {
+    // No video URL: hide iframe and show "coming soon" text
+    iframe.src = '';
+    if (fallback) fallback.style.display = '';
+    // If you want to hide the entire section instead, uncomment:
+    // section.style.display = 'none';
+  }
 }
 
 // ---------- GALLERY (numbered images + lightbox) ----------
@@ -774,6 +850,7 @@ async function initProductPage() {
     renderOptions(optionsByCanon, groupNameMap);
     renderSpecs(specs);
     setupGallery(product);
+    renderVideo(product);        // NEW: hook up video
     updateOptionVisibility();
     recalcPrice(); // also calls updateEmailConfig
   } catch (err) {
