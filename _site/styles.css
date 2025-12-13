@@ -1968,3 +1968,150 @@ figure.about-photo figcaption {
   }
 }
 
+/* =======================================================
+   CUSTOM BUILDER PANELS (scoped, non-conflicting)
+   Uses your existing vars and existing #productOptions styles
+   ======================================================= */
+
+/* Panels live inside #productOptions, so keep it scoped */
+#productOptions details.custom-panel {
+  border: 1px solid #e4e1d9;               /* matches your spec-card border vibe */
+  border-radius: 10px;
+  background: #fafafa;                      /* matches .specs-section / cards */
+  overflow: clip;                           /* modern; prevents ugly overflow */
+  box-shadow: 0 2px 10px rgba(0,0,0,.04);   /* consistent with your cards */
+  transition: box-shadow .2s ease, border-color .2s ease, transform .2s ease;
+}
+
+/* Open state: subtle highlight (uses your green) */
+#productOptions details.custom-panel[open] {
+  border-color: rgba(16,59,32,.35);
+  box-shadow: 0 8px 24px rgba(0,0,0,.08);
+}
+
+/* Summary header */
+#productOptions details.custom-panel > summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+
+  padding: 14px 16px;
+  font-family: var(--heading-font);
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: .2px;
+  color: var(--green-dark);
+
+  background: linear-gradient(180deg,#faf9f6,#f3f0ea); /* matches spec-card header */
+  border-bottom: 1px solid #e8e4db;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Remove default marker triangle */
+#productOptions details.custom-panel > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Custom chevron */
+#productOptions details.custom-panel > summary::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid rgba(16,59,32,.65);
+  border-bottom: 2px solid rgba(16,59,32,.65);
+  transform: rotate(45deg);
+  transition: transform .22s ease;
+  flex: 0 0 auto;
+}
+
+#productOptions details.custom-panel[open] > summary::after {
+  transform: rotate(-135deg);
+}
+
+/* Hover / focus */
+#productOptions details.custom-panel > summary:hover {
+  background: linear-gradient(180deg,#fffdf8,#f5efe2);
+}
+
+#productOptions details.custom-panel > summary:focus-visible {
+  outline: 2px solid rgba(16,59,32,.55);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Inner content wrapper */
+#productOptions .custom-panel-inner {
+  padding: 14px 16px 16px;
+}
+
+/* ---- Smooth open/close animation (no JS required) ----
+   This uses a grid trick to animate height.
+   Very reliable vs animating max-height.
+*/
+#productOptions details.custom-panel .custom-panel-inner {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows .28s ease;
+}
+
+#productOptions details.custom-panel .custom-panel-inner > * {
+  overflow: hidden; /* required for the grid animation */
+}
+
+/* When open, allow content to expand */
+#productOptions details.custom-panel[open] .custom-panel-inner {
+  grid-template-rows: 1fr;
+}
+
+/* The actual content container you append option blocks into */
+#productOptions details.custom-panel .custom-panel-inner > .custom-panel-inner {
+  /* If you accidentally nested, don't blow up */
+}
+
+/* We need a "content" child to animate cleanly.
+   Since your JS currently appends option blocks directly into .custom-panel-inner,
+   we’ll handle that by wrapping with an extra div via CSS fallback:
+   Make the inner use padding and animate the first child. */
+#productOptions details.custom-panel[open] .custom-panel-inner {
+  animation: lbPanelFade .22s ease;
+}
+
+@keyframes lbPanelFade {
+  from { opacity: .0; transform: translateY(-3px); }
+  to   { opacity: 1;  transform: translateY(0); }
+}
+
+/* Option block spacing inside panels — doesn't fight your existing rules */
+#productOptions details.custom-panel .option-block {
+  margin-bottom: 14px;
+}
+
+#productOptions details.custom-panel .option-block:last-child {
+  margin-bottom: 0;
+}
+
+/* Mobile tweaks */
+@media (max-width: 700px) {
+  #productOptions details.custom-panel > summary {
+    font-size: 1rem;
+    padding: 12px 14px;
+  }
+
+  #productOptions .custom-panel-inner {
+    padding: 12px 14px 14px;
+  }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  #productOptions details.custom-panel,
+  #productOptions details.custom-panel > summary::after,
+  #productOptions details.custom-panel .custom-panel-inner {
+    transition: none !important;
+    animation: none !important;
+  }
+}

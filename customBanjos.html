@@ -3,52 +3,247 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Custom Banjos • Lemon Banjos</title>
+  <title>Custom Banjo Builder | Lemon Banjo</title>
+
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" type="image/png" href="assets/favicon.png">
+
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      emailjs.init({ publicKey: 'WYWVsQcBGt69SrK3u' });
+    });
+
+    // Config store (compatible with banjo.html behavior)
+    window.LemonBanjo = window.LemonBanjo || {
+      _cfg: { id: '', series: '', model: '', base_price: 0, final_price: 0, selections: {} },
+      setConfig(cfg) { this._cfg = { ...this._cfg, ...cfg }; },
+      getConfig() { return this._cfg; }
+    };
+  </script>
 </head>
+
 <body>
   <div id="header"></div>
 
-  <section class="section">
-    <div class="container narrow">
-      <h1 class="section-title">Custom Series</h1>
-      <p class="text-center">
-        The Lemon Custom Series Banjo Builder Tool is still under development<br><br>
-		If you're interested in designing a custom banjo, I’d be glad to walk through options, pricing, and possibilities with you.<br><br>
-		Please feel free to reach out using the contact information below:<br><br>
-        Hunter Lemon<br>
-        Email: hunter@lemonbanjos.com<br>
-        Phone: (304)-266-0476
-      </p>
+  <section class="product">
+    <div class="container">
+      <div class="product-grid">
+
+        <!-- 3D VIEWER PLACEHOLDER -->
+        <div class="product-gallery">
+          <div class="main-image-wrapper" style="min-height:380px; display:flex; align-items:center; justify-content:center;">
+            <div style="text-align:center; opacity:0.8;">
+              <h3>3D Viewer</h3>
+              <p class="small">Coming soon.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TITLE -->
+        <div class="product-header-block">
+          <p id="seriesText">Custom Series</p>
+          <h1 class="product-title" id="productTitle">Custom Banjo Builder</h1>
+        </div>
+
+        <!-- PRICE -->
+        <div class="product-price-block">
+          <p id="productBasePrice" class="small"></p>
+          <h2><em id="productPrice">Loading…</em></h2>
+
+          <!-- SALE PILL (matches banjo.html styling) -->
+          <div id="salePill" class="sale-pill" style="display:none;"></div>
+        </div>
+
+        <!-- OPTIONS -->
+        <div class="product-details">
+          <div id="productOptions"></div>
+          <button class="button" id="askBtn" type="button">Ask About This Build</button>
+        </div>
+
+      </div>
     </div>
   </section>
 
   <div id="footer"></div>
 
-  <script>
-	  function initHeaderFooter() {
-		return Promise.all([
-		  fetch('header.html').then(r => r.text()).then(h => {
-			document.getElementById('header').innerHTML = h;
-		  }),
-		  fetch('footer.html').then(r => r.text()).then(f => {
-			document.getElementById('footer').innerHTML = f;
-		  })
-		]).then(() => {
-		  // this runs AFTER header/footer are in the DOM
-		  const toggle = document.getElementById('menu-toggle');
-		  const nav = document.getElementById('main-nav');
-		  if (toggle && nav) {
-			toggle.addEventListener('click', () => {
-			  const isOpen = nav.classList.toggle('open');
-			  toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-			});
-		  }
-		});
-	  }
+  <!-- EMAIL MODAL (matches your existing .lb-modal CSS) -->
+  <div class="lb-modal-backdrop" id="emailModalBackdrop" aria-hidden="true">
+    <div class="lb-modal" role="dialog" aria-modal="true" aria-label="Ask about this build">
+      <h3>Tell me how to reach you</h3>
 
-	  initHeaderFooter().catch(console.error);
-	</script>
+      <form id="emailForm">
+        <div class="lb-row">
+          <div>
+            <label for="custName">Name</label>
+            <input id="custName" name="custName" placeholder="Your name" required />
+          </div>
+          <div>
+            <label for="custEmail">Email</label>
+            <input id="custEmail" name="custEmail" type="email" placeholder="you@example.com" required />
+          </div>
+        </div>
+
+        <div class="lb-row">
+          <div>
+            <label for="custPhone">Phone</label>
+            <input id="custPhone" name="custPhone" placeholder="Optional" />
+          </div>
+          <div>
+            <label for="custAddress">Address</label>
+            <input id="custAddress" name="custAddress" placeholder="Optional" />
+          </div>
+        </div>
+
+        <div class="lb-row">
+          <div>
+            <label for="custCity">City</label>
+            <input id="custCity" name="custCity" placeholder="Optional" />
+          </div>
+          <div>
+            <label for="custState">State</label>
+            <input id="custState" name="custState" placeholder="Optional" />
+          </div>
+        </div>
+
+        <div class="lb-row">
+          <div>
+            <label for="custZip">ZIP</label>
+            <input id="custZip" name="custZip" placeholder="Optional" />
+          </div>
+          <div></div>
+        </div>
+
+        <div class="lb-row comments-row">
+          <div class="lb-comments-group">
+            <label for="custComments">Comments</label>
+            <textarea id="custComments" name="custComments" placeholder="Anything else you'd like me to know"></textarea>
+          </div>
+        </div>
+
+        <div id="emailStatus" class="lb-note lb-hidden" aria-live="polite"></div>
+
+        <div class="lb-actions">
+          <button type="button" class="lb-btn" id="cancelEmail">Cancel</button>
+          <button type="submit" class="lb-btn primary" id="sendEmail">Send</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- HEADER / FOOTER -->
+  <script>
+    Promise.all([
+      fetch('header.html').then(r => r.text()).then(h => header.innerHTML = h),
+      fetch('footer.html').then(r => r.text()).then(f => footer.innerHTML = f)
+    ]);
+  </script>
+
+  <!-- CUSTOM BUILDER -->
+  <script src="assets/js/customBuilder.js"></script>
+
+  <!-- EMAIL MODAL BEHAVIOR + SEND (same template as banjo.html) -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const openBtn = document.getElementById('askBtn');
+      const backdrop = document.getElementById('emailModalBackdrop');
+      const cancelBtn = document.getElementById('cancelEmail');
+      const form = document.getElementById('emailForm');
+      const statusEl = document.getElementById('emailStatus');
+
+      function openModal() {
+        backdrop.style.display = 'flex';
+        backdrop.setAttribute('aria-hidden', 'false');
+      }
+      function closeModal() {
+        backdrop.style.display = 'none';
+        backdrop.setAttribute('aria-hidden', 'true');
+      }
+
+      openBtn?.addEventListener('click', openModal);
+      cancelBtn?.addEventListener('click', closeModal);
+      backdrop?.addEventListener('click', e => { if (e.target === backdrop) closeModal(); });
+
+      function setDisabled(disabled) {
+        form.classList.toggle('lb-disabled', disabled);
+        form.querySelectorAll('input,button,textarea').forEach(el => {
+          if (el.id !== 'cancelEmail') el.disabled = disabled;
+        });
+      }
+
+      function selectionsFromDOM() {
+        const out = [];
+        document.querySelectorAll('#productOptions .option-block').forEach(block => {
+          const group = block.querySelector('p')?.textContent?.trim() || '';
+          if (!group) return;
+
+          const sel = block.querySelector('select');
+          if (sel) {
+            const opt = sel.options[sel.selectedIndex];
+            if (opt && !opt.hidden) out.push([group, opt.textContent.trim()]);
+          }
+        });
+        return out;
+      }
+
+      form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        setDisabled(true);
+
+        statusEl.classList.remove('lb-hidden');
+        statusEl.innerHTML = `<div class="lb-status"><span class="spinner"></span>Sending…</div>`;
+
+        const SERVICE_ID = 'service_wbxklc2';
+        const TEMPLATE_ID = 'lemon_info_notice';
+
+        try {
+          const cfg = window.LemonBanjo?.getConfig?.() || {};
+
+          const priceEl = document.getElementById('productPrice');
+          const baseShown = document.getElementById('productBasePrice')?.textContent || '';
+          const priceShown = priceEl?.textContent || '';
+
+          const ownerParams = {
+            from_name:  (document.getElementById('custName')?.value || '').trim(),
+            from_email: (document.getElementById('custEmail')?.value || '').trim(),
+            phone:      (document.getElementById('custPhone')?.value || '').trim(),
+            address:    (document.getElementById('custAddress')?.value || '').trim(),
+            city:       (document.getElementById('custCity')?.value || '').trim(),
+            state:      (document.getElementById('custState')?.value || '').trim(),
+            zip:        (document.getElementById('custZip')?.value || '').trim(),
+            comments:   (document.getElementById('custComments')?.value || '').trim(),
+
+            model:      cfg.model || cfg.id || 'CUSTOM',
+            series:     cfg.series || 'Custom Series',
+            base_price: baseShown,
+            final_price: priceShown,
+
+            selections: selectionsFromDOM().map(([g, v]) => `${g}: ${v}`).join('\n'),
+            page_url: window.location.href,
+            reply_to: (document.getElementById('custEmail')?.value || '').trim()
+          };
+
+          await emailjs.send(SERVICE_ID, TEMPLATE_ID, ownerParams);
+
+          statusEl.innerHTML = `<div class="lb-status success">
+            <span class="check"></span>
+            <span>Thanks! I’ve received your info and will be in touch soon.</span>
+          </div>`;
+
+          setTimeout(() => {
+            form.reset();
+            setDisabled(false);
+            closeModal();
+          }, 2500);
+
+        } catch (err) {
+          console.error('EmailJS send failed:', err);
+          statusEl.innerHTML = `<div class="lb-status error">Sorry—could not send. Please try again.</div>`;
+          setDisabled(false);
+        }
+      });
+    });
+  </script>
 </body>
 </html>
