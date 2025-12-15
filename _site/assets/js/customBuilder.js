@@ -60,10 +60,10 @@ const BuilderState = {
 async function loadBuilderData(customKey) {
   const key = customKey || CUSTOM_KEY;
 
-  // CustomBuilderMeta mirrors Products sale behavior:
+  // CustomBuilder mirrors Products sale behavior:
   // A=title, B=base_price, C=sale_price, D=sale_label, E=sale_active
   const [metaT, optT] = await Promise.all([
-    gvizQuery('CustomBuilderMeta', `select A,B,C,D,E`),
+    gvizQuery('CustomBuilder', `select A,B,C,D,E`),
     gvizQuery('CustomBuilderOptions', `select A,B,C,D,E,F,G,H,I,J,K,L,M`)
   ]);
 
@@ -175,17 +175,19 @@ async function loadBuilderData(customKey) {
     if (!groupNameMap[groupCanon]) groupNameMap[groupCanon] = groupOrig;
 
     optionsByCanon[groupCanon].push({
-      groupCanon,
-      groupName: groupOrig,
-      option_name: optNameClean,
-      price_type,
-      price_delta,
-      visible: visibleBool,
-      sort: sortNum,
-      dep_groupCanon: depGroupCanon,
-      dep_value: depValClean,
-      is_default: isDefBool
-    });
+  groupCanon,
+  groupName: groupOrig,
+  option_name: optNameClean,
+  price_type,
+  price_delta,
+  visible: visibleBool,
+  sort: sortNum,
+  dep_groupCanon: depGroupCanon,
+  dep_value: depValClean,
+  is_default: isDefBool,
+  ui_type: canon(uiType) // ← ADD THIS
+});
+
   });
 
   // sort each group by sort (and stable fallback)
@@ -281,6 +283,33 @@ function buildOptionBlock(groupCanon, opts, groupNameMap) {
   });
 
   block.appendChild(select);
+  
+  // ---------- TEXT INPUT (Name Block custom text) ----------
+const textOpt = opts.find(o => o.ui_type === 'text');
+if (textOpt) {
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'option-text-input';
+  input.placeholder = 'Enter custom text…';
+  input.style.display = 'none';
+
+  // show ONLY when the matching option is selected
+  const updateVisibility = () => {
+    input.style.display = (select.value === textOpt.option_name) ? 'block' : 'none';
+  };
+
+  updateVisibility();
+
+  select.addEventListener('change', updateVisibility);
+
+  input.addEventListener('input', () => {
+    BuilderState.selected[`${groupCanon}__text`] = input.value;
+    updateEmailConfig();
+  });
+
+  block.appendChild(input);
+}
+
   return block;
 }
 
@@ -468,11 +497,20 @@ function updateEmailConfig() {
   const selections = {};
   const { groupNameMap, selected } = BuilderState;
 
-  Object.entries(selected || {}).forEach(([canonKey, val]) => {
-    if (!val) return;
-    const displayGroup = (groupNameMap && groupNameMap[canonKey]) || canonKey;
-    selections[displayGroup] = val;
-  });
+Object.entries(selected || {}).forEach(([canonKey, val]) => {
+  if (!val) return;
+
+  if (canonKey.endsWith('__text')) {
+    const baseKey = canonKey.replace('__text', '');
+    const label = (groupNameMap && groupNameMap[baseKey]) || baseKey;
+    selections[`${label} (Custom Text)`] = val;
+    return;
+  }
+
+  const displayGroup = (groupNameMap && groupNameMap[canonKey]) || canonKey;
+  selections[displayGroup] = val;
+});
+
 
   const priceEl = document.getElementById('productPrice');
   const priceText = priceEl ? priceEl.textContent : '';
