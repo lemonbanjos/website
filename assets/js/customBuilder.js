@@ -33,7 +33,6 @@ const fmtUSD = n =>
     .format(Number(n) || 0);
 
 // ---------- KEY ----------
-// Keeping this for future flexibility, but NOT used to query Products.
 function getCustomKey() {
   const params = new URLSearchParams(window.location.search);
   const keyFromUrl = params.get('key');
@@ -50,32 +49,25 @@ const CUSTOM_KEY = getCustomKey();
 // ---------- STATE ----------
 const BuilderState = {
   key: CUSTOM_KEY,
-  product: null,         // { model_id, title, series, base_price, sale_price, sale_label, sale_active }
-  optionsByCanon: null,  // { groupCanon: [ option... ] }
-  groupNameMap: null,    // { groupCanon: displayName }
-  selected: {}           // { groupCanon: option_name }
+  product: null,
+  optionsByCanon: null,
+  groupNameMap: null,
+  selected: {}
 };
 
 // ---------- LOAD DATA ----------
 async function loadBuilderData(customKey) {
   const key = customKey || CUSTOM_KEY;
 
-  // CustomBuilder mirrors Products sale behavior:
-  // A=title, B=base_price, C=sale_price, D=sale_label, E=sale_active
   const [metaT, optT] = await Promise.all([
     gvizQuery('CustomBuilder', `select A,B,C,D,E`),
-    gvizQuery('CustomBuilderOptions', `select A,B,C,D,E,F,G,H,I,J,K,L,M`)
+    // Your sheet is A..N (14 cols)
+    gvizQuery('CustomBuilderOptions', `select A,B,C,D,E,F,G,H,I,J,K,L,M,N`)
   ]);
 
-  // ---------- Meta (title/base/sale) ----------
+  // ---------- Meta ----------
   const metaRow = rows(metaT)[0] || [];
-  const [
-    mTitle,
-    mBase,
-    mSale,
-    mSaleLabel,
-    mSaleActive
-  ] = metaRow;
+  const [mTitle, mBase, mSale, mSaleLabel, mSaleActive] = metaRow;
 
   const base_price = Number(mBase || 0);
   const sale_price = Number(mSale || 0);
@@ -88,7 +80,7 @@ async function loadBuilderData(customKey) {
     ) && sale_price > 0;
 
   const product = {
-    model_id: key, // you can keep CUSTOM_KEY here if you like
+    model_id: key,
     title: cleanStr(mTitle) || 'Custom Banjo Builder',
     series: 'Custom Series',
     base_price,
@@ -109,19 +101,20 @@ async function loadBuilderData(customKey) {
 
   optionRows.forEach(row => {
     const [
-      groupName,
-      optName,
-      priceDelta,
-      priceType,
-      isDefault,
-      sort,
-      visible,
-      depGroup,
-      depValue,
-      panelName,
-      panelSort,
-      panelOpen,
-      uiType // currently unused but reserved
+      groupName,    // A
+      optName,      // B
+      priceDelta,   // C
+      priceType,    // D
+      isDefault,    // E
+      sort,         // F
+      visible,      // G
+      depGroup,     // H
+      depValue,     // I
+      depMode,      // J
+      panelName,    // K
+      panelSort,    // L
+      panelOpen,    // M
+      uiType        // N
     ] = row;
 
     const groupOrig = cleanStr(groupName);
@@ -146,7 +139,9 @@ async function loadBuilderData(customKey) {
       (typeof isDefault === 'number' && isDefault === 1);
 
     const depGroupCanon = canon(depGroup);
+    const depGroupRaw = cleanStr(depGroup);
     const depValClean = cleanStr(depValue);
+    const depModeClean = (cleanStr(depMode) || 'show_if').toLowerCase(); // show_if | hide_if
 
     // Panel meta
     const panelNameClean = cleanStr(panelName) || 'General';
@@ -175,22 +170,26 @@ async function loadBuilderData(customKey) {
     if (!groupNameMap[groupCanon]) groupNameMap[groupCanon] = groupOrig;
 
     optionsByCanon[groupCanon].push({
-  groupCanon,
-  groupName: groupOrig,
-  option_name: optNameClean,
-  price_type,
-  price_delta,
-  visible: visibleBool,
-  sort: sortNum,
-  dep_groupCanon: depGroupCanon,
-  dep_value: depValClean,
-  is_default: isDefBool,
-  ui_type: canon(uiType) // ← ADD THIS
-});
+      groupCanon,
+      groupName: groupOrig,
+      option_name: optNameClean,
+      price_type,
+      price_delta,
+      visible: visibleBool,
+      sort: sortNum,
 
+      // deps (legacy + multi)
+      dep_groupCanon: depGroupCanon,
+      dep_groupRaw: depGroupRaw,
+      dep_value: depValClean,
+      dep_mode: depModeClean,
+
+      is_default: isDefBool,
+      ui_type: canon(uiType)
+    });
   });
 
-  // sort each group by sort (and stable fallback)
+  // sort each group
   Object.values(optionsByCanon).forEach(arr => {
     arr.sort((a, b) => (a.sort - b.sort) || a.option_name.localeCompare(b.option_name));
   });
@@ -207,16 +206,16 @@ async function loadBuilderData(customKey) {
 
 // ---------- RENDER HEADER ----------
 function renderHeader(product) {
-	const pill = document.getElementById('salePill');
-if (pill) {
-  if (product.sale_active) {
-    pill.style.display = 'inline-block';
-    pill.textContent = product.sale_label || 'Sale';
-  } else {
-    pill.style.display = 'none';
-    pill.textContent = '';
+  const pill = document.getElementById('salePill');
+  if (pill) {
+    if (product.sale_active) {
+      pill.style.display = 'inline-block';
+      pill.textContent = product.sale_label || 'Sale';
+    } else {
+      pill.style.display = 'none';
+      pill.textContent = '';
+    }
   }
-}
 
   const seriesEl = document.getElementById('seriesText');
   const titleEl = document.getElementById('productTitle');
@@ -283,32 +282,30 @@ function buildOptionBlock(groupCanon, opts, groupNameMap) {
   });
 
   block.appendChild(select);
-  
-  // ---------- TEXT INPUT (Name Block custom text) ----------
-const textOpt = opts.find(o => o.ui_type === 'text');
-if (textOpt) {
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.className = 'option-text-input';
-  input.placeholder = 'Enter custom text…';
-  input.style.display = 'none';
 
-  // show ONLY when the matching option is selected
-  const updateVisibility = () => {
-    input.style.display = (select.value === textOpt.option_name) ? 'block' : 'none';
-  };
+  // ---------- TEXT INPUT ----------
+  const textOpt = opts.find(o => o.ui_type === 'text');
+  if (textOpt) {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'option-text-input';
+    input.placeholder = 'Enter custom text…';
+    input.style.display = 'none';
 
-  updateVisibility();
+    const updateVisibility = () => {
+      input.style.display = (select.value === textOpt.option_name) ? 'block' : 'none';
+    };
 
-  select.addEventListener('change', updateVisibility);
+    updateVisibility();
+    select.addEventListener('change', updateVisibility);
 
-  input.addEventListener('input', () => {
-    BuilderState.selected[`${groupCanon}__text`] = input.value;
-    updateEmailConfig();
-  });
+    input.addEventListener('input', () => {
+      BuilderState.selected[`${groupCanon}__text`] = input.value;
+      updateEmailConfig();
+    });
 
-  block.appendChild(input);
-}
+    block.appendChild(input);
+  }
 
   return block;
 }
@@ -326,7 +323,7 @@ function setupDetailsAccordion(container) {
   });
 }
 
-// ---------- RENDER OPTIONS (NOW IN <details> PANELS) ----------
+// ---------- RENDER OPTIONS ----------
 function renderOptions(optionsByCanon, groupNameMap) {
   const container = document.getElementById('productOptions');
   if (!container) return;
@@ -337,7 +334,6 @@ function renderOptions(optionsByCanon, groupNameMap) {
   const panelsByCanon = BuilderState.panelsByCanon || {};
   const panelList = Object.values(panelsByCanon).sort((a, b) => a.panelSort - b.panelSort);
 
-  // If no panels defined, fallback to old behavior (flat list)
   if (!panelList.length) {
     const entries = Object.entries(optionsByCanon);
     entries.forEach(([groupCanon, opts]) => {
@@ -351,7 +347,6 @@ function renderOptions(optionsByCanon, groupNameMap) {
     return;
   }
 
-  // Render each panel as <details>
   panelList.forEach(panel => {
     const details = document.createElement('details');
     details.className = 'custom-panel';
@@ -381,6 +376,64 @@ function renderOptions(optionsByCanon, groupNameMap) {
   updateEmailConfig();
 }
 
+// ---------- DEP HELPERS ----------
+function parseDepClauses(opt) {
+  // Prefer the field that contains an expression ("=").
+  // This lets you put "Group=Val, Other=Val" in dep_value OR dep_group.
+  const rawValue = cleanStr(opt.dep_value);
+  const rawGroup = cleanStr(opt.dep_groupRaw);
+  const raw =
+    rawValue.includes('=') ? rawValue :
+    rawGroup.includes('=') ? rawGroup :
+    rawValue;
+
+  const clauses = [];
+
+  // Multi: "Group=Val, Other Group=Val|Val"
+  if (raw.includes('=')) {
+    raw.split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+      .forEach(part => {
+        const i = part.indexOf('=');
+        if (i < 0) return;
+
+        const g = canon(part.slice(0, i).trim());
+        const v = part.slice(i + 1).trim();
+
+        const allowed = v
+          .split('|')
+          .map(x => canon(x.trim()))
+          .filter(Boolean);
+
+        if (g && allowed.length) clauses.push({ g, allowed });
+      });
+
+    return clauses;
+  }
+
+  // Legacy: dep_group + dep_value (allow dep_value "A|B|C")
+  if (opt.dep_groupCanon && rawValue) {
+    const allowed = rawValue.split('|').map(x => canon(x.trim())).filter(Boolean);
+    if (allowed.length) clauses.push({ g: opt.dep_groupCanon, allowed });
+  }
+
+  return clauses;
+}
+
+function depMatches(opt, selected) {
+  const mode = (opt.dep_mode || 'show_if').toLowerCase();
+  const clauses = parseDepClauses(opt);
+
+  // no deps => match true
+  const match =
+    clauses.length === 0
+      ? true
+      : clauses.every(({ g, allowed }) => allowed.includes(canon(selected[g] || '')));
+
+  return (mode === 'hide_if') ? !match : match;
+}
+
 // ---------- DEPENDENCY VISIBILITY ----------
 function updateOptionVisibility() {
   const { optionsByCanon, selected } = BuilderState;
@@ -396,11 +449,10 @@ function updateOptionVisibility() {
     let anyVisible = false;
 
     opts.forEach((opt, idx) => {
-      let show = opt.visible;
+      let show = !!opt.visible;
 
-      if (show && opt.dep_groupCanon && opt.dep_value) {
-        const depSel = selected[opt.dep_groupCanon];
-        show = canon(depSel) === canon(opt.dep_value);
+      if (show) {
+        show = depMatches(opt, selected);
       }
 
       const optEl = select.options[idx];
@@ -497,20 +549,19 @@ function updateEmailConfig() {
   const selections = {};
   const { groupNameMap, selected } = BuilderState;
 
-Object.entries(selected || {}).forEach(([canonKey, val]) => {
-  if (!val) return;
+  Object.entries(selected || {}).forEach(([canonKey, val]) => {
+    if (!val) return;
 
-  if (canonKey.endsWith('__text')) {
-    const baseKey = canonKey.replace('__text', '');
-    const label = (groupNameMap && groupNameMap[baseKey]) || baseKey;
-    selections[`${label} (Custom Text)`] = val;
-    return;
-  }
+    if (canonKey.endsWith('__text')) {
+      const baseKey = canonKey.replace('__text', '');
+      const label = (groupNameMap && groupNameMap[baseKey]) || baseKey;
+      selections[`${label} (Custom Text)`] = val;
+      return;
+    }
 
-  const displayGroup = (groupNameMap && groupNameMap[canonKey]) || canonKey;
-  selections[displayGroup] = val;
-});
-
+    const displayGroup = (groupNameMap && groupNameMap[canonKey]) || canonKey;
+    selections[displayGroup] = val;
+  });
 
   const priceEl = document.getElementById('productPrice');
   const priceText = priceEl ? priceEl.textContent : '';
