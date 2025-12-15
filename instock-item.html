@@ -244,7 +244,7 @@
         statusEl.innerHTML = `<div class="lb-status"><span class="spinner"></span>Sending…</div>`;
 
         const SERVICE_ID  = 'service_wbxklc2';
-        const TEMPLATE_ID = 'lemon_info_notice';  // only YOUR email
+        const TEMPLATE_ID = 'contact_us';  // only YOUR email
 
         try {
           const cfg     = LemonBanjo.getConfig();
@@ -265,6 +265,22 @@
             final_price: priceEl.textContent,
             selections:  selectionsFromDOM().map(([g,v]) => `${g}: ${v}`).join('\n'),
             page_url:    window.location.href,
+            subject:     `In-Stock Banjo Inquiry: ${cfg.model || cfg.id || 'In-Stock Banjo'}`,
+            message:     [
+              `TYPE: In-Stock banjo inquiry`,
+              `MODEL: ${cfg.model || cfg.id || ''}`,
+              `SERIES: ${cfg.series || ''}`,
+              `BASE PRICE: ${priceEl.dataset.base || ''}`,
+              `DISPLAYED PRICE: ${priceEl.textContent || ''}`,
+              '',
+              `SELECTIONS:`,
+              selectionsFromDOM().map(([g,v]) => `${g}: ${v}`).join('\n') || '(none)',
+              '',
+              `COMMENTS:`,
+              (custComments.value || '').trim() || '(none)',
+              '',
+              `PAGE: ${window.location.href}`
+            ].join('\n'),
             reply_to:    custEmail.value.trim()
           };
 

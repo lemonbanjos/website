@@ -315,7 +315,7 @@
         statusEl.innerHTML = `<div class="lb-status"><span class="spinner"></span>Sending…</div>`;
 
         const SERVICE_ID = 'service_wbxklc2';
-        const TEMPLATE_ID = 'lemon_info_notice';  // only YOUR email
+        const TEMPLATE_ID = 'contact_us';  // consolidated template
 
         try {
           const cfg = LemonBanjo.getConfig();
@@ -325,6 +325,26 @@
             from_name:  custName.value.trim(),
             from_email: custEmail.value.trim(),
             phone:      custPhone.value.trim(),
+            subject:    `Banjo inquiry: ${cfg.model || ''}${cfg.series ? ` (${cfg.series})` : ''}`, 
+            message:    [
+              `TYPE: Banjo inquiry`,
+              `MODEL: ${cfg.model || ''}`,
+              `SERIES: ${cfg.series || ''}`,
+              `BASE PRICE: ${priceEl?.dataset?.base || ''}`,
+              `DISPLAYED PRICE: ${priceEl?.textContent || ''}`,
+              ``,
+              `SELECTIONS:`,
+              selectionsFromDOM().map(([g,v]) => `- ${g}: ${v}`).join('\n'),
+              ``,
+              `COMMENTS:`,
+              (custComments.value || '').trim() || '(none)',
+              ``,
+              `SHIPPING / LOCATION (optional):`,
+              `Address: ${custAddress.value.trim()}`,
+              `City: ${custCity.value.trim()}`,
+              `State: ${custState.value.trim()}`,
+              `ZIP: ${custZip.value.trim()}`
+            ].join('\n'),
             address:    custAddress.value.trim(),
             city:       custCity.value.trim(),
             state:      custState.value.trim(),
