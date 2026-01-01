@@ -1,5 +1,5 @@
 title: "Lemon Banjos"
-url: "https://lemonbanjos.github.io"
-baseurl: "/website"   # because your main site lives under /website
-permalink: /website/blog/:title/
+url: "https://www.lemonbanjos.com"
+baseurl: ""
+permalink: /blog/:title/
 excerpt_separator: "<!--more-->"

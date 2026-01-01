@@ -8,8 +8,8 @@
   </title>
 
   <!-- Same CSS + favicon as default -->
-  <link rel="stylesheet" href="/website/styles.css" />
-  <link rel="icon" type="image/png" href="/website/assets/favicon.png">
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
 </head>
 <body>
   <div id="header"></div>
@@ -81,10 +81,10 @@
   <script>
     function initHeaderFooter() {
       return Promise.all([
-        fetch('/website/header.html').then(r => r.text()).then(h => {
+        fetch('/header.html').then(r => r.text()).then(h => {
           document.getElementById('header').innerHTML = h;
         }),
-        fetch('/website/footer.html').then(r => r.text()).then(f => {
+        fetch('/footer.html').then(r => r.text()).then(f => {
           document.getElementById('footer').innerHTML = f;
         })
       ]).then(() => {
