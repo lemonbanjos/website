@@ -123,6 +123,7 @@ async function loadInStockData(itemId) {
   const imageCount   = col(foundRow, 'image_count');
   const sortOrder    = col(foundRow, 'sort_order');
   const shortDesc    = col(foundRow, 'short_description'); // optional
+  const videoUrl     = col(foundRow, 'video_url');         // NEW
 
   const regularPrice = Number(price || 0);
   const salePriceNum = Number(salePrice || 0);
@@ -150,8 +151,10 @@ async function loadInStockData(itemId) {
     imageFolder: sClean(imageFolder),
     sortOrder: Number(sortOrder || 0),
     shortDesc: sClean(shortDesc),
-    imageCount: Number(imageCount || 0) || 0
+    imageCount: Number(imageCount || 0) || 0,
+    video_url: sClean(videoUrl)          // NEW
   };
+
 
   // ----- InStockSpecs rows -----
   const specTable = await sQuery('InStockSpecs', 'select *');
@@ -293,6 +296,69 @@ function renderInStockSpecs(specs) {
     grid.appendChild(card);
   });
 }
+
+// ---------- VIDEO RENDER ----------
+
+function normalizeVideoUrl(raw) {
+  const url = sClean(raw);
+  if (!url) return '';
+
+  // If it already looks like an embed URL, just use it
+  if (url.includes('/embed/')) return url;
+
+  // YouTube watch URL -> embed
+  if (url.includes('youtube.com/watch')) {
+    try {
+      const u = new URL(url);
+      const v = u.searchParams.get('v');
+      if (v) {
+        return `https://www.youtube.com/embed/${v}`;
+      }
+    } catch (e) {
+      // fall through
+    }
+  }
+
+  // youtu.be short link -> embed
+  if (url.includes('youtu.be/')) {
+    try {
+      const u = new URL(url);
+      const id = u.pathname.replace('/', '');
+      if (id) {
+        return `https://www.youtube.com/embed/${id}`;
+      }
+    } catch (e) {
+      // fall through
+    }
+  }
+
+  // Otherwise, just return what we were given
+  return url;
+}
+
+function renderInStockVideo(p) {
+  const section  = document.getElementById('videoSection');
+  const iframe   = document.getElementById('productVideo');
+  const fallback = document.getElementById('videoFallback');
+
+  if (!section || !iframe) return;
+
+  const raw   = p.video_url || '';
+  const embed = normalizeVideoUrl(raw);
+
+  if (embed) {
+    iframe.src = embed;
+    section.style.display = '';
+    if (fallback) fallback.style.display = 'none';
+  } else {
+    // No video URL: clear src and show fallback text
+    iframe.src = '';
+    if (fallback) fallback.style.display = '';
+    // If you’d rather hide the whole section, you can also:
+    // section.style.display = 'none';
+  }
+}
+
 
 // ---------- GALLERY (numbered images + fallback to legacy) ----------
 
@@ -486,6 +552,28 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('[InStockDetail] Loaded item', product);
       renderInStockHeader(product);
       renderInStockPrice(product);
+      renderInStockSpecs(specs);
+      setupInStockGallery(product);
+      initInStockEmailConfig(product);
+    })
+    .catch(err => {
+      console.error('[InStockDetail] Error loading in-stock item', err);
+      const titleEl = document.getElementById('productTitle');
+      if (titleEl) titleEl.textContent = 'In-Stock Banjo Not Found';
+      const priceEl = document.getElementById('productPrice');
+      if (priceEl) priceEl.textContent = '';
+    });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const id = getInStockId();
+
+  loadInStockData(id)
+    .then(({ product, specs }) => {
+      console.log('[InStockDetail] Loaded item', product);
+      renderInStockHeader(product);
+      renderInStockPrice(product);
+      renderInStockVideo(product);   // NEW
       renderInStockSpecs(specs);
       setupInStockGallery(product);
       initInStockEmailConfig(product);
