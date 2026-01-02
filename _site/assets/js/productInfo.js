@@ -48,7 +48,7 @@ async function gvizQuery(sheet, tq) {
 
 const LemonState = {
   model: MODEL,          // e.g. "LEGACY35-LB-3"
-  product: null,         // { model_id, title, series, base_price, sale_price, sale_label, sale_active, image_count, video_url }
+  product: null,         // { model_id, title, series, base_price, sale_price, sale_label, sale_active, image_count, video_url, visible }
   optionsByCanon: null,  // { groupCanon: [option, ...] }
   groupNameMap: null,    // { groupCanon: displayName }
   selected: {},          // { groupCanon: option_name }
@@ -92,15 +92,15 @@ async function loadData(modelKey) {
   const key = modelKey || MODEL;
 
   const [prodT, optT, specT] = await Promise.all([
-    // NOTE: now also selecting I (video URL)
-    gvizQuery('Products', `select A,B,C,D,E,F,G,H,I where A='${key}'`),
+    // NOTE: I (video URL) and K (visible)
+    gvizQuery('Products', `select A,B,C,D,E,F,G,H,I,K where A='${key}'`),
     gvizQuery('Options',  `select B,C,D,E,F,G,H,I,J where A='${key}'`),
     gvizQuery('Specs',    `select B,C,D,E where A='${key}' order by B asc, E asc`)
   ]);
 
   // ---------- Product ----------
   const prodRow = rows(prodT)[0] || [];
-  // [key, title, series, base, sale, saleLabel, saleActive, imageCount, videoUrl]
+  // [key, title, series, base, sale, saleLabel, saleActive, imageCount, videoUrl, visible]
   const [
     pKey,
     pTitle,
@@ -110,12 +110,27 @@ async function loadData(modelKey) {
     pSaleLabel,
     pSaleActive,
     pImageCount,
-    pVideoUrl
+    pVideoUrl,
+    pVisible
   ] = prodRow;
 
   if (!pKey) {
     console.error('No product row found for key', key);
     throw new Error('Product not found');
+  }
+
+  // Interpret visibility flag
+  // Default: if cell is empty, treat as visible
+  const visible =
+    pVisible == null ||
+    pVisible === true ||
+    (typeof pVisible === 'string' && pVisible.toLowerCase() === 'true') ||
+    (typeof pVisible === 'number' && pVisible === 1);
+
+  // If not visible, treat as not found / unavailable
+  if (!visible) {
+    console.warn('Product is marked not visible in sheet; blocking page load for', key);
+    throw new Error('Product not visible');
   }
 
   const base_price = Number(pBase || 0);
@@ -140,7 +155,8 @@ async function loadData(modelKey) {
     sale_label: cleanStr(pSaleLabel),
     sale_active,
     image_count,
-    video_url
+    video_url,
+    visible
   };
 
   // ---------- Options ----------
@@ -156,7 +172,7 @@ async function loadData(modelKey) {
       priceType,
       isDefault,
       sort,
-      visible,
+      visibleOpt,
       depGroup,
       depValue
     ] = row;
@@ -175,9 +191,9 @@ async function loadData(modelKey) {
 
     const sortNum = Number(sort || 0);
     const visibleBool =
-      visible === true ||
-      (typeof visible === 'string' && visible.toLowerCase() === 'true') ||
-      (typeof visible === 'number' && visible === 1);
+      visibleOpt === true ||
+      (typeof visibleOpt === 'string' && visibleOpt.toLowerCase() === 'true') ||
+      (typeof visibleOpt === 'number' && visibleOpt === 1);
 
     const depGroupCanon = canon(depGroup);
     const depValClean = cleanStr(depValue);
@@ -440,7 +456,7 @@ function updateOptionVisibility() {
 
       const visibleOpts = visibleIndices.map(i => ({
         opt: opts[i],
-      optEl: select.options[i]
+        optEl: select.options[i]
       }));
 
       const stillVisible = visibleOpts.some(v => v.opt.option_name === currentVal);
@@ -635,7 +651,7 @@ function renderVideo(product) {
 }
 
 // ---------- GALLERY (numbered images + lightbox) ----------
-// (unchanged from your original)
+
 function setupGallery(product) {
   const imageCount = Number(product.image_count || 0) || 1;
   const baseFolder = getImageBaseFolder(product.model_id);
@@ -855,10 +871,18 @@ async function initProductPage() {
     recalcPrice(); // also calls updateEmailConfig
   } catch (err) {
     console.error('Error initializing product page', err);
+
     const titleEl = document.getElementById('productTitle');
-    if (titleEl) titleEl.textContent = 'Banjo Not Found';
+    if (titleEl) titleEl.textContent = 'This banjo is unavailable';
+
     const priceEl = document.getElementById('productPrice');
     if (priceEl) priceEl.textContent = '';
+
+    const opts = document.getElementById('productOptions');
+    if (opts) opts.innerHTML = '<p>Sorry — this model is not currently available.</p>';
+
+    const gallery = document.querySelector('.product-gallery');
+    if (gallery) gallery.style.display = 'none';
   }
 }
 

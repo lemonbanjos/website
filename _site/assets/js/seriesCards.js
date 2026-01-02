@@ -3,7 +3,8 @@
 //  - Builds cards for each .card-grid
 //  - Uses Products sheet:
 //      A:key, B:title, C:Series Label,
-//      D:base_price (regular), E:sale_price, F:sale_label, G:sale_active
+//      D:base_price (regular), E:sale_price, F:sale_label, G:sale_active,
+//      K:visible (TRUE/FALSE/1/0)
 //  - Derives image path from data-image-root + key
 //  - Shows sale pricing (struck-through regular + red sale)
 // =======================================================
@@ -64,15 +65,28 @@ function buildImagePath(key, imageRoot) {
   return `${safeRoot}/${slug}/1.webp`;
 }
 
-
 async function initSeriesCards() {
   const grids = Array.from(document.querySelectorAll('.card-grid'));
   if (!grids.length) return;
 
   // Pull all products once
-  const prodTable = await gvizQuerySeries('Products', 'select A,B,C,D,E,F,G');
+  // NOTE: visible is in column K, so we select it explicitly
+  const prodTable = await gvizQuerySeries(
+    'Products',
+    'select A,B,C,D,E,F,G,K'
+  );
+
   const allProducts = rowsSeries(prodTable).map(row => {
-    const [key, title, seriesLabel, basePrice, salePrice, saleLabel, saleActiveRaw] = row;
+    const [
+      key,
+      title,
+      seriesLabel,
+      basePrice,
+      salePrice,
+      saleLabel,
+      saleActiveRaw,
+      visibleRaw
+    ] = row;
 
     const regularBase = Number(basePrice || 0);
     const saleBase    = Number(salePrice || 0);
@@ -86,6 +100,13 @@ async function initSeriesCards() {
 
     const effectivePrice = saleActive ? saleBase : regularBase;
 
+    // Treat null/blank as "visible"
+    const visible =
+      visibleRaw == null ||           // default: show if cell is empty
+      visibleRaw === true ||
+      (typeof visibleRaw === 'string' && visibleRaw.toLowerCase() === 'true') ||
+      (typeof visibleRaw === 'number' && visibleRaw === 1);
+
     return {
       key: cleanStrSeries(key),
       title: cleanStrSeries(title),
@@ -94,14 +115,15 @@ async function initSeriesCards() {
       saleBase,
       saleActive,
       saleLabel: cleanStrSeries(saleLabel),
-      effectivePrice
+      effectivePrice,
+      visible
     };
-  }).filter(p => p.key);
+  }).filter(p => p.key && p.visible); // only show visible models
 
   grids.forEach(grid => {
-    const prefix   = cleanStrSeries(grid.dataset.seriesPrefix || "").toUpperCase();
-    const allMode  = grid.dataset.allBanjos === "true";
-    const imageRootAttr = cleanStrSeries(grid.dataset.imageRoot || "");
+    const prefix       = cleanStrSeries(grid.dataset.seriesPrefix || '').toUpperCase();
+    const allMode      = grid.dataset.allBanjos === 'true';
+    const imageRootAttr = cleanStrSeries(grid.dataset.imageRoot || '');
 
     let models;
 
@@ -129,10 +151,10 @@ async function initSeriesCards() {
       let imageRoot = imageRootAttr;
       if (!imageRoot) {
         // auto-root for All Banjos based on key prefix
-        if (p.key.startsWith("LEGACY35"))      imageRoot = "assets/product_images/35";
-        else if (p.key.startsWith("LEGACY54")) imageRoot = "assets/product_images/54";
-        else if (p.key.startsWith("MASTER"))   imageRoot = "assets/product_images/master";
-        else if (p.key.startsWith("OLDTIME"))  imageRoot = "assets/product_images/oldtime";
+        if (p.key.startsWith('LEGACY35'))      imageRoot = 'assets/product_images/35';
+        else if (p.key.startsWith('LEGACY54')) imageRoot = 'assets/product_images/54';
+        else if (p.key.startsWith('MASTER'))   imageRoot = 'assets/product_images/master';
+        else if (p.key.startsWith('OLDTIME'))  imageRoot = 'assets/product_images/oldtime';
       }
 
       const imgSrc = buildImagePath(p.key, imageRoot);
@@ -155,7 +177,7 @@ async function initSeriesCards() {
       const body = document.createElement('div');
       body.className = 'card-body';
 
-      if (allMode && p.seriesLabel) {
+      if (p.seriesLabel) {
         const seriesEl = document.createElement('div');
         seriesEl.className = 'card-series';
         seriesEl.textContent = p.seriesLabel;
