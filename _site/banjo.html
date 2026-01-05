@@ -50,15 +50,25 @@
         </div>
 
         <div class="product-details">
-          <div id="productOptions" aria-describedby="optionsHelp"></div>
-          <p id="optionsHelp" class="small mt-neg-8">Choose configuration to see updated price.</p>
+  <div id="productOptions" aria-describedby="optionsHelp"></div>
+  <p id="optionsHelp" class="small mt-neg-8">Choose configuration to see updated price.</p>
 
-          <button class="button" id="askBtn" type="button">Ask About This Banjo</button>
-          <div class="product-description" id="productDescription"></div>
-        </div>
+  <button class="button" id="askBtn" type="button">Ask About This Banjo</button>
+</div>
+
       </div>
     </div>
   </section>
+
+</section> <!-- end .product -->
+
+<!-- Description section -->
+<section class="description-section" id="descriptionSection">
+  <div class="container">
+    <h2>Description</h2>
+    <div class="product-description" id="productDescription"></div>
+  </div>
+</section>
 
   <!-- Video section -->
 <section class="video-section" id="videoSection">
@@ -91,12 +101,20 @@
 
 
 
-  <section class="specs-section">
-    <div class="container-wide">
+<section class="specs-section" id="specsSection">
+  <div class="container-wide">
+    <div class="specs-header">
       <h2>Specifications</h2>
-      <div id="specsGrid" class="specs-grid" aria-live="polite"></div>
+
+      <button id="printSpecsBtn" class="print-specs-btn" type="button" aria-label="Print specifications">
+        🖨 Print Specs
+      </button>
     </div>
-  </section>
+
+    <div id="specsGrid" class="specs-grid" aria-live="polite"></div>
+  </div>
+</section>
+
 
   <div id="footer"></div>
 
@@ -382,5 +400,16 @@
 
   <script src="assets/js/productInfo.js"></script>
   <script src="assets/js/galleryLightbox.js" defer></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const btn = document.getElementById("printSpecsBtn");
+    if (btn) {
+      btn.addEventListener("click", () => {
+        window.print();
+      });
+    }
+  });
+</script>
+
 </body>
 </html>

@@ -93,7 +93,7 @@ async function loadData(modelKey) {
 
   const [prodT, optT, specT] = await Promise.all([
     // NOTE: I (video URL) and K (visible)
-    gvizQuery('Products', `select A,B,C,D,E,F,G,H,I,K where A='${key}'`),
+    gvizQuery('Products', `select A,B,C,D,E,F,G,H,I,K,L where A='${key}'`),
     gvizQuery('Options',  `select B,C,D,E,F,G,H,I,J where A='${key}'`),
     gvizQuery('Specs',    `select B,C,D,E where A='${key}' order by B asc, E asc`)
   ]);
@@ -111,7 +111,8 @@ async function loadData(modelKey) {
     pSaleActive,
     pImageCount,
     pVideoUrl,
-    pVisible
+    pVisible,
+    pDescription
   ] = prodRow;
 
   if (!pKey) {
@@ -156,7 +157,8 @@ async function loadData(modelKey) {
     sale_active,
     image_count,
     video_url,
-    visible
+    visible,
+    description: cleanStr(pDescription)
   };
 
   // ---------- Options ----------
@@ -260,6 +262,29 @@ function renderHeader(product) {
     document.title = `${product.title} | Lemon Banjo`;
   }
 }
+
+function renderDescription(product) {
+  const section = document.getElementById('descriptionSection');
+  const p = document.getElementById('productDescription');
+  const h2 = section?.querySelector('h2');
+  if (!section || !p) return;
+
+const desc = cleanStr(product.description);
+
+// ⭐ Only remove the word "series" for this heading
+const series = cleanStr(product.series).replace(/series/i, '').trim();
+const name = product.title || product.model_id || 'Description';
+const fullName = series ? `${series} ${name}` : name;
+
+if (desc) {
+  p.textContent = desc;
+  if (h2) h2.textContent = `${fullName} — Description`;
+  section.style.display = '';
+} else {
+  section.style.display = 'none';
+}
+}
+
 
 // ---------- RENDER OPTIONS UI (ALL AS DROPDOWNS) ----------
 
@@ -565,6 +590,17 @@ function recalcPrice() {
 
 function renderSpecs(specs) {
   const grid = document.getElementById('specsGrid');
+  const specsHeader = document.querySelector('.specs-section h2');
+
+ if (specsHeader && LemonState?.product) {
+  // ⭐ Only remove the word "series" for this heading
+  const series = cleanStr(LemonState.product.series).replace(/series/i, '').trim();
+  const name = LemonState.product.title || LemonState.product.model_id || 'Specifications';
+  const fullName = series ? `${series} ${name}` : name;
+
+  specsHeader.textContent = `${fullName} — Specifications`;
+}
+
   if (!grid) return;
 
   grid.innerHTML = '';
@@ -634,6 +670,13 @@ function renderVideo(product) {
 
   if (!section || !iframe) return;
 
+  // 🔊 Update video title to "Hear the <model name>"
+  const headerTitle = section.querySelector('.video-card-header h2');
+  if (headerTitle) {
+    const title = product.title || product.model_id || 'This Banjo';
+    headerTitle.textContent = `Hear the ${title}`;
+  }
+
   const raw = product.video_url || '';
   const embed = normalizeVideoUrl(raw);
 
@@ -649,6 +692,7 @@ function renderVideo(product) {
     // section.style.display = 'none';
   }
 }
+
 
 // ---------- GALLERY (numbered images + lightbox) ----------
 
@@ -863,6 +907,7 @@ async function initProductPage() {
   try {
     const { product, optionsByCanon, groupNameMap, specs } = await loadData(MODEL);
     renderHeader(product);
+    renderDescription(product);
     renderOptions(optionsByCanon, groupNameMap);
     renderSpecs(specs);
     setupGallery(product);

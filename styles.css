@@ -2124,3 +2124,81 @@ figure.about-photo figcaption {
   border: 1px solid #ccc;
   border-radius: 6px;
 }
+
+.product-description {
+  white-space: pre-line;
+}
+
+/* -------- PRINT BUTTON STYLE -------- */
+.print-specs-btn {
+  border: 1px solid #ccc;
+  background: #f7f7f7;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.print-specs-btn:hover {
+  background: #eaeaea;
+}
+
+/* -------- PRINT RULES -------- */
+/* -------- ONE-PAGE SPEC SHEET PRINT RULES -------- */
+/* -------- SIMPLE ONE-PAGE SPECS PRINT -------- */
+@media print {
+
+  /* Smaller margins so it uses most of the 8.5x11 page */
+  @page {
+    margin: 0.35in;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: #ffffff;
+    font-size: 11pt;
+    line-height: 1.35;
+  }
+
+  /* Hide all the non-specs sections completely */
+  #header,
+  #footer,
+  .product,
+  .description-section,
+  .video-section,
+  .lightbox,
+  #emailModalBackdrop,
+  .lb-modal-backdrop {
+    display: none !important;
+  }
+
+  /* Make sure the specs section prints */
+  .specs-section {
+    display: block;
+  }
+
+  /* Let it use the full printable width */
+  .specs-section .container-wide {
+    max-width: none;
+    width: 100%;
+  }
+
+  /* Tighten card spacing a bit so more fits */
+  #specsGrid {
+    column-gap: 0.5rem;
+    row-gap: 0.5rem;
+  }
+
+  #specsGrid > * {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Hide the print button itself */
+  .print-specs-btn {
+    display: none !important;
+  }
+}
+
