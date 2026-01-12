@@ -15,7 +15,7 @@ published: true
 
 <p>As an inexperienced teen, I had no idea how to use many tools necessary to build anything. With a lot of help from my Dad, we were able to build the Bucket-Jo together. The Bucket-Jo is pretty much what it sounds like: a piece of pine lumber shoved through the bottom half of a 5-gallon bucket, a fretboard made from red oak, frets made from nails filed smooth and glued in place, and a cardboard resonator. It was crude banjo—barely playable, in fact—but the principle was there. Oh, the joy when I first strummed the strings! It sounded like a banjo and looked like a banjo, so it was a banjo - no matter how rough. It was far from perfect, with its horrible intonation and strings seemingly an inch off the fretboard, but that was okay! What mattered was the discovery—that even at 15, I could start building something meaningful with my own two hands. More importantly, it gave me the bug for luthier work.</p>
 
-<img src="/website/assets/blog/2025-01-01-from-bucketjo-to-banjo-part-1/1.jpg"
+<img src="/assets/blog/2025-01-01-from-bucketjo-to-banjo-part-1/1.jpg"
      alt=""
      style="max-width:100%;height:auto;">
 
@@ -32,13 +32,13 @@ published: true
 <h2>Looking Like A Banjo</h2>
 <p>The next day we worked on this project, I took the blank to the bandsaw and began to work on creating the rough shape of a banjo neck. I cut the headstock to a roughly 15-degree angle, left enough room to shape a nice hand stop at the base of the headstock, thinned the middle of the blank to the rough thickness of a neck, and left the end thicker for the heel. With the side profile completed, I then turned the neck over and began working on the front profile. I cut the sides of the neck off to make the rough shape of a banjo fretboard—especially the signature “5th string bump”—and took care to make sure the cuts surrounding the headstock were nearly perpendicular to the fretboard surface—just like I’d learned many banjo headstocks are.</p>
 
-<img src="/website/assets/blog/2025-01-01-from-bucketjo-to-banjo-part-1/2.jpg"
+<img src="/assets/blog/2025-01-01-from-bucketjo-to-banjo-part-1/2.jpg"
      alt=""
      style="max-width:100%;height:auto;">
-<img src="/website/assets/blog/2025-01-01-from-bucketjo-to-banjo-part-1/3.jpg"
+<img src="//assets/blog/2025-01-01-from-bucketjo-to-banjo-part-1/3.jpg"
      alt=""
      style="max-width:100%;height:auto;">
-<img src="/website/assets/blog/2025-01-01-from-bucketjo-to-banjo-part-1/4.jpg"
+<img src="/assets/blog/2025-01-01-from-bucketjo-to-banjo-part-1/4.jpg"
      alt=""
      style="max-width:100%;height:auto;">
 
@@ -46,7 +46,7 @@ published: true
 
 <p>Although fretboards are typically made from harder woods, once again, I did not have that option. Instead, I found a piece of walnut in the shop and used it as a fretboard. I made plans on borrowing a fret saw from a friend to saw slots in the board after it was on the neck, so I went ahead and cut my walnut fretboard to shape and glued it onto the neck. To match the fretboard, I also glued a thin piece of walnut to the face of the headstock.</p>
 
-<img src="/website/assets/blog/2025-01-01-from-bucketjo-to-banjo-part-1/5.jpg"
+<img src="/assets/blog/2025-01-01-from-bucketjo-to-banjo-part-1/5.jpg"
      alt=""
      style="max-width:100%;height:auto;">
 
