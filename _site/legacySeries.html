@@ -96,7 +96,7 @@
 
       try {
         const res = await fetch(
-          GVIZ('Products', `select A,D where ${whereClause}`),
+          GVIZ('Banjos', `select A,D where ${whereClause}`),
           { cache: 'no-store' }
         );
         const txt = await res.text();

@@ -4,6 +4,13 @@
 
 const SHEET_ID = '1JaKOJLDKDgEvIg54UKKg2J3fftwOsZlKBw1j5qjeheU';
 
+
+// Sheet tab names (Google Sheets)
+const SHEETS = {
+  products: 'Banjos',
+  options:  'Banjo_Options',
+  specs:    'Banjo_Specs'
+};
 const GVIZ = (sheet, tq) =>
   'https://corsproxy.io/?' +
   'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?' +
@@ -93,9 +100,9 @@ async function loadData(modelKey) {
 
   const [prodT, optT, specT] = await Promise.all([
     // NOTE: I (video URL) and K (visible)
-    gvizQuery('Products', `select A,B,C,D,E,F,G,H,I,K,L where A='${key}'`),
-    gvizQuery('Options',  `select B,C,D,E,F,G,H,I,J where A='${key}'`),
-    gvizQuery('Specs',    `select B,C,D,E where A='${key}' order by B asc, E asc`)
+    gvizQuery(SHEETS.products, `select A,B,C,D,E,F,G,H,I,K,L where A='${key}'`),
+    gvizQuery(SHEETS.options,  `select B,C,D,E,F,G,H,I,J where A='${key}'`),
+    gvizQuery(SHEETS.specs,    `select B,C,D,E where A='${key}' order by B asc, E asc`)
   ]);
 
   // ---------- Product ----------

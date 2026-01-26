@@ -1,12 +1,14 @@
 // =======================================================
 //  Series Cards Loader (Google Sheets Driven)
 //  - Builds cards for each .card-grid
-//  - Uses Products sheet:
+//  - Reads from a "products" sheet (default: Banjos)
+//
+//  Expected columns on the products sheet:
 //      A:key, B:title, C:Series Label,
 //      D:base_price (regular), E:sale_price, F:sale_label, G:sale_active,
 //      K:visible (TRUE/FALSE/1/0)
 //  - Derives image path from data-image-root + key
-//  - Shows sale pricing (struck-through regular + red sale)
+//  - Shows sale pricing (struck-through regular + sale)
 // =======================================================
 
 const SHEET_ID = '1JaKOJLDKDgEvIg54UKKg2J3fftwOsZlKBw1j5qjeheU';
@@ -34,19 +36,11 @@ async function gvizQuerySeries(sheet, tq) {
 
 /**
  * Given a product key like "LEGACY35-LB-00" and an imageRoot like
- * "assets/product_images/35", return the path to the first numbered image
- * thumbnail:
+ * "assets/product_images/35", return the path to the first numbered image:
  *
- *   "assets/product_images/35/lb-00/thumbnails/1.webp"
+ *   "assets/product_images/35/lb-00/1.webp"
  *
- * Your folder structure per model should now look like:
- *   assets/product_images/35/lb-00/1.webp
- *   assets/product_images/35/lb-00/2.webp
- *   ...
- *   assets/product_images/35/lb-00/thumbnails/1.webp
- *   assets/product_images/35/lb-00/thumbnails/2.webp
- *   ...
- * (and optionally lightbox/1.webp, 2.webp, etc. for the product page)
+ * Adjust slugging here if your folder naming changes.
  */
 function buildImagePath(key, imageRoot) {
   const safeRoot = imageRoot.replace(/\/+$/, ''); // trim trailing slashes
@@ -61,22 +55,24 @@ function buildImagePath(key, imageRoot) {
     slug = String(key).toLowerCase();
   }
 
-  // Use the first numbered thumbnail for grid cards
+  // Use the first numbered image for grid cards
   return `${safeRoot}/${slug}/1.webp`;
 }
 
-async function initSeriesCards() {
-  const grids = Array.from(document.querySelectorAll('.card-grid'));
-  if (!grids.length) return;
+// Cache products per sheet so we don't fetch the same sheet multiple times
+const _productsCache = new Map();
 
-  // Pull all products once
+/**
+ * Load products from a given sheet name (e.g., "Banjos" or "Necks")
+ */
+async function getProductsFromSheet(productsSheet) {
+  const sheetName = cleanStrSeries(productsSheet) || 'Banjos';
+  if (_productsCache.has(sheetName)) return _productsCache.get(sheetName);
+
   // NOTE: visible is in column K, so we select it explicitly
-  const prodTable = await gvizQuerySeries(
-    'Products',
-    'select A,B,C,D,E,F,G,K'
-  );
+  const prodTable = await gvizQuerySeries(sheetName, 'select A,B,C,D,E,F,G,K');
 
-  const allProducts = rowsSeries(prodTable).map(row => {
+  const products = rowsSeries(prodTable).map(row => {
     const [
       key,
       title,
@@ -120,21 +116,62 @@ async function initSeriesCards() {
     };
   }).filter(p => p.key && p.visible); // only show visible models
 
-  grids.forEach(grid => {
-    const prefix       = cleanStrSeries(grid.dataset.seriesPrefix || '').toUpperCase();
-    const allMode      = grid.dataset.allBanjos === 'true';
+  _productsCache.set(sheetName, products);
+  return products;
+}
+
+/**
+ * Try to pick a reasonable default image root when none is provided.
+ * You can override per-grid by setting data-image-root on the .card-grid element.
+ */
+function inferImageRoot({ productsSheet, key }) {
+  const sheetLower = String(productsSheet || '').toLowerCase();
+  const k = String(key || '');
+
+  // If you're on the Necks sheet, default to a necks folder.
+  if (sheetLower.includes('neck')) return 'assets/product_images/necks';
+
+  // Otherwise, keep your existing banjo heuristics by key prefix.
+  if (k.startsWith('LEGACY35')) return 'assets/product_images/35';
+  if (k.startsWith('LEGACY54')) return 'assets/product_images/54';
+  if (k.startsWith('MASTER'))   return 'assets/product_images/master';
+  if (k.startsWith('OLDTIME'))  return 'assets/product_images/oldtime';
+
+  // Fallback
+  return 'assets/product_images';
+}
+
+async function initSeriesCards() {
+  const grids = Array.from(document.querySelectorAll('.card-grid'));
+  if (!grids.length) return;
+
+  // Process each grid independently (so different grids can point at different sheets)
+  for (const grid of grids) {
+    // Default to Banjos to match your renamed sheet
+    const productsSheet = cleanStrSeries(grid.dataset.productsSheet || '') || 'Banjos';
+    const productPage   = cleanStrSeries(grid.dataset.productPage || '') || 'banjo.html';
+    const altNoun       = cleanStrSeries(grid.dataset.altNoun || '') || 'banjo';
+
+    const prefix = cleanStrSeries(grid.dataset.seriesPrefix || '').toUpperCase();
+
+    // Support a few flags (backwards compatible)
+    const allMode =
+      grid.dataset.allProducts === 'true' ||
+      grid.dataset.allBanjos === 'true' ||
+      grid.dataset.allNecks === 'true';
+
     const imageRootAttr = cleanStrSeries(grid.dataset.imageRoot || '');
 
-    let models;
+    // Pull products from the sheet this grid points to
+    const allProducts = await getProductsFromSheet(productsSheet);
 
+    let models;
     if (allMode) {
       models = allProducts.slice(); // copy all
     } else if (prefix) {
-      models = allProducts.filter(p =>
-        p.key.toUpperCase().startsWith(prefix + '-')
-      );
+      models = allProducts.filter(p => p.key.toUpperCase().startsWith(prefix + '-'));
     } else {
-      return; // nothing to do
+      continue; // nothing to do
     }
 
     // Sort by *effective* price (sale if active, else regular)
@@ -143,20 +180,12 @@ async function initSeriesCards() {
     // Remove loading message
     grid.querySelectorAll('.loading-message').forEach(m => m.remove());
 
-    models.forEach(p => {
-      const href = `banjo.html?key=${encodeURIComponent(p.key)}`;
+    for (const p of models) {
+      const href = `${productPage}?key=${encodeURIComponent(p.key)}`;
       const aria = `View ${p.seriesLabel || ''} ${p.title || p.key}`;
 
       // Determine image root
-      let imageRoot = imageRootAttr;
-      if (!imageRoot) {
-        // auto-root for All Banjos based on key prefix
-        if (p.key.startsWith('LEGACY35'))      imageRoot = 'assets/product_images/35';
-        else if (p.key.startsWith('LEGACY54')) imageRoot = 'assets/product_images/54';
-        else if (p.key.startsWith('MASTER'))   imageRoot = 'assets/product_images/master';
-        else if (p.key.startsWith('OLDTIME'))  imageRoot = 'assets/product_images/oldtime';
-      }
-
+      const imageRoot = imageRootAttr || inferImageRoot({ productsSheet, key: p.key });
       const imgSrc = buildImagePath(p.key, imageRoot);
 
       const link = document.createElement('a');
@@ -171,7 +200,7 @@ async function initSeriesCards() {
       const img = document.createElement('img');
       img.loading = 'lazy';
       img.src = imgSrc;
-      img.alt = `${p.seriesLabel || 'Lemon'} ${p.title || p.key} banjo`;
+      img.alt = `${p.seriesLabel || 'Lemon'} ${p.title || p.key} ${altNoun}`;
       img.className = 'card-img';
 
       const body = document.createElement('div');
@@ -213,8 +242,8 @@ async function initSeriesCards() {
       article.appendChild(body);
       link.appendChild(article);
       grid.appendChild(link);
-    });
-  });
+    }
+  }
 }
 
 // Kick it off on DOM ready
