@@ -267,6 +267,7 @@ body{
 .product-grid{
   display:grid;
   grid-template-columns:60% 40%;
+  grid-template-rows: auto auto auto;
   column-gap:48px;   /* keep wide space between gallery and right column */
   row-gap:16px;      /* smaller space between header, price, details */
   align-items:start;
@@ -274,6 +275,7 @@ body{
     "gallery header"
     "gallery price"
     "gallery details";
+	justify-content: flex-start;
 }
 
 .product-title{
@@ -2202,3 +2204,9 @@ figure.about-photo figcaption {
   }
 }
 
+.product-price-block h2 {
+  margin: 6px 0 0;
+}
+.product-price-block p {
+  margin: 0;
+}

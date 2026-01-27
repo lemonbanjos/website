@@ -27,36 +27,38 @@
 
   <section class="product">
     <div class="container">
-      <div class="product-grid">
+<div class="product-grid">
 
-        <div class="product-gallery">
-          <div class="thumb-rail" role="list" id="thumbRail">
-            <!-- Thumbnails are generated dynamically by neckInfo.js -->
-          </div>
+  <!-- LEFT: Gallery (leave this exactly as-is) -->
+  <div class="product-gallery">
+    <div class="thumb-rail" role="list" id="thumbRail"></div>
 
-          <div class="main-image-wrapper">
-            <img alt="Neck — front" class="main-image" id="mainImage">
-          </div>
-        </div>
+    <div class="main-image-wrapper">
+      <img alt="Neck — front" class="main-image" id="mainImage">
+    </div>
+  </div>
 
-        <div class="product-header-block">
-          <p id="seriesText">Loading…</p>
-          <h1 class="product-title" id="productTitle">Loading…</h1>
-        </div>
+  <!-- RIGHT: Wrapper only for text/price/options -->
+  <div class="product-info">
+    <div class="product-header-block">
+      <p id="seriesText">Loading…</p>
+      <h1 class="product-title" id="productTitle">Loading…</h1>
+    </div>
 
-        <div class="product-price-block">
-          <p id="productBasePrice" style="font-size: 0.85rem; opacity: 0.65; margin-bottom: -4px;"></p>
-          <h2><em id="productPrice" aria-live="polite">Loading…</em></h2>
-        </div>
+    <div class="product-price-block">
+      <p id="productBasePrice" style="font-size: 0.85rem; opacity: 0.65; margin-bottom: -4px;"></p>
+      <h2><em id="productPrice" aria-live="polite">Loading…</em></h2>
+    </div>
 
-        <div class="product-details">
-          <div id="productOptions" aria-describedby="optionsHelp"></div>
-          <p id="optionsHelp" class="small mt-neg-8">Choose configuration to see updated price.</p>
+    <div class="product-details">
+      <div id="productOptions" aria-describedby="optionsHelp"></div>
+      <p id="optionsHelp" class="small mt-neg-8">Choose configuration to see updated price.</p>
+      <button class="button" id="askBtn" type="button">Ask About This Neck</button>
+    </div>
+  </div>
 
-          <button class="button" id="askBtn" type="button">Ask About This Neck</button>
-        </div>
+</div>
 
-      </div>
     </div>
   </section>
   <!-- end .product -->
@@ -176,31 +178,64 @@
     initHeaderFooter();
   </script>
 
-  <!-- Auto-set document title from sheet-driven content -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const titleEl = document.getElementById('productTitle');
-      const seriesEl = document.getElementById('seriesText');
+<!-- Auto-set document title + H1 from sheet-driven content (always append "Neck") -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const titleEl = document.getElementById('productTitle');
+    const seriesEl = document.getElementById('seriesText');
 
-      function syncTitle() {
-        const t = (titleEl?.textContent || '').trim();
-        const s = (seriesEl?.textContent || '').trim();
+    function normalizeNeckTitle(raw) {
+      if (!raw) return '';
+      return raw.toLowerCase().endsWith(' neck')
+        ? raw
+        : `${raw} Neck`;
+    }
 
-        if (!t) return;
-        const lower = t.toLowerCase();
-        if (lower === 'loading…' || lower === 'loading...') return;
+    function syncTitle() {
+      if (!titleEl) return;
 
-        document.title = s && s.toLowerCase() !== 'loading…' && s.toLowerCase() !== 'loading...'
-          ? `${t} | ${s}`
-          : t;
+      let rawTitle = (titleEl.textContent || '').trim();
+      if (!rawTitle) return;
+
+      const lower = rawTitle.toLowerCase();
+      if (lower === 'loading…' || lower === 'loading...') return;
+
+      // Ensure H1 includes "Neck"
+      const normalized = normalizeNeckTitle(rawTitle);
+
+      if (normalized !== rawTitle) {
+        titleEl.textContent = normalized;
       }
 
-      syncTitle();
+      const series = (seriesEl?.textContent || '').trim();
 
-      if (titleEl) new MutationObserver(syncTitle).observe(titleEl, { childList: true, subtree: true, characterData: true });
-      if (seriesEl) new MutationObserver(syncTitle).observe(seriesEl, { childList: true, subtree: true, characterData: true });
-    });
-  </script>
+      // Browser tab title
+      document.title =
+        series && !series.toLowerCase().startsWith('loading')
+          ? `${normalized} | ${series}`
+          : normalized;
+    }
+
+    syncTitle();
+
+    if (titleEl) {
+      new MutationObserver(syncTitle).observe(titleEl, {
+        childList: true,
+        subtree: true,
+        characterData: true
+      });
+    }
+
+    if (seriesEl) {
+      new MutationObserver(syncTitle).observe(seriesEl, {
+        childList: true,
+        subtree: true,
+        characterData: true
+      });
+    }
+  });
+</script>
+
 
   <!-- Product routing (image paths) -->
   <script>
