@@ -16,7 +16,7 @@ const SHEET_ID = '1JaKOJLDKDgEvIg54UKKg2J3fftwOsZlKBw1j5qjeheU';
 const GVIZ_SERIES = (sheet, tq) =>
   'https://corsproxy.io/?' +
   'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?' +
-  new URLSearchParams({ sheet, tq }).toString();
+  new URLSearchParams({ sheet, tq, _cb: Date.now()}).toString();
 
 const rowsSeries = t => (t?.rows || []).map(r => (r.c || []).map(c => c?.v ?? null));
 
