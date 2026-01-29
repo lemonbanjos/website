@@ -1,15 +1,23 @@
-// LemonBanjos seriesCards.js (with sorting) - build 2026-01-28-3 (no-cache-removed)
-// If you don't see the sort dropdown, you are not loading this file.
+// LemonBanjos seriesCards.js (with sorting) - build 2026-01-29-1
+// Sort defaults:
+//  - Necks: Name A → Z
+//  - Everything else: Price Low → High
 // =======================================================
 
 const SHEET_ID = '1JaKOJLDKDgEvIg54UKKg2J3fftwOsZlKBw1j5qjeheU';
 
-// GViz via allorigins (normal caching; no forced no-store/cb)
-const GVIZ = (sheet, tq) => {
-  const base = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?' +
+// Use a proxy that works reliably on GitHub Pages.
+// (corsproxy.io often returns 403 from GitHub Pages.)
+function proxyUrl(rawUrl) {
+  return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawUrl);
+}
+
+function gvizUrl(sheet, tq) {
+  const raw =
+    'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?' +
     new URLSearchParams({ sheet, tq }).toString();
-  return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(base);
-};
+  return proxyUrl(raw);
+}
 
 const rows = t => (t?.rows || []).map(r => (r.c || []).map(c => c?.v ?? null));
 const clean = v => (v == null ? '' : String(v).replace(/\u00a0/g, ' ').trim());
@@ -17,20 +25,27 @@ const fmtUSD = n =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(n) || 0);
 
 async function gvizQuery(sheet, tq) {
-  const res = await fetch(GVIZ(sheet, tq), { cache: 'no-store' });
+  const res = await fetch(gvizUrl(sheet, tq));
   const txt = await res.text();
+
+  // GViz responses look like: google.visualization.Query.setResponse({...});
+  // Guard against proxy returning HTML/errors.
+  if (!txt.includes('google.visualization.Query')) {
+    throw new Error(`GViz response not detected for sheet="${sheet}". First 120 chars: ${txt.slice(0, 120)}`);
+  }
+
   const json = JSON.parse(txt.substring(47).slice(0, -2));
   return json.table;
 }
 
 function buildImagePath(key, imageRoot) {
-  const safeRoot = imageRoot.replace(/\/+$/, '');
-  const parts = String(key).split('-');
+  const safeRoot = String(imageRoot || '').replace(/\/+$/, '');
+  const parts = String(key || '').split('-');
   let slug;
 
   if (parts.length >= 3) slug = (parts[1] + '-' + parts[2]).toLowerCase();
   else if (parts.length === 2) slug = parts[1].toLowerCase();
-  else slug = String(key).toLowerCase();
+  else slug = String(key || '').toLowerCase();
 
   return `${safeRoot}/${slug}/1.webp`;
 }
@@ -38,6 +53,7 @@ function buildImagePath(key, imageRoot) {
 function inferImageRoot(productsSheet, key) {
   const sheetLower = String(productsSheet || '').toLowerCase();
   const k = String(key || '');
+
   if (sheetLower.includes('neck')) return 'assets/product_images/necks';
   if (k.startsWith('LEGACY35')) return 'assets/product_images/35';
   if (k.startsWith('LEGACY54')) return 'assets/product_images/54';
@@ -66,6 +82,7 @@ function sortModels(models, field, dir) {
   }
 }
 
+// In-memory cache so multiple grids on the same page don't refetch
 const _cache = new Map();
 
 async function getProducts(productsSheet) {
@@ -75,50 +92,44 @@ async function getProducts(productsSheet) {
   // A:key B:title C:series_label D:base E:sale F:sale_label G:sale_active K:visible
   const table = await gvizQuery(sheet, 'select A,B,C,D,E,F,G,K');
 
-  const products = rows(table)
-    .map(r => {
-      const [key, title, seriesLabel, basePrice, salePrice, saleLabel, saleActiveRaw, visibleRaw] = r;
+  const products = rows(table).map(r => {
+    const [key, title, seriesLabel, basePrice, salePrice, saleLabel, saleActiveRaw, visibleRaw] = r;
 
-      const regularBase = Number(basePrice || 0);
-      const saleBase = Number(salePrice || 0);
+    const regularBase = Number(basePrice || 0);
+    const saleBase = Number(salePrice || 0);
 
-      const saleActive =
-        !!(
-          saleActiveRaw === true ||
-          (typeof saleActiveRaw === 'string' && saleActiveRaw.toLowerCase() === 'true') ||
-          (typeof saleActiveRaw === 'number' && saleActiveRaw === 1)
-        ) && saleBase > 0;
+    const saleActive =
+      !!(
+        saleActiveRaw === true ||
+        (typeof saleActiveRaw === 'string' && saleActiveRaw.toLowerCase() === 'true') ||
+        (typeof saleActiveRaw === 'number' && saleActiveRaw === 1)
+      ) && saleBase > 0;
 
-      const effectivePrice = saleActive ? saleBase : regularBase;
+    const effectivePrice = saleActive ? saleBase : regularBase;
 
-      const visible =
-        visibleRaw == null ||
-        visibleRaw === true ||
-        (typeof visibleRaw === 'string' && visibleRaw.toLowerCase() === 'true') ||
-        (typeof visibleRaw === 'number' && visibleRaw === 1);
+    const visible =
+      visibleRaw == null ||
+      visibleRaw === true ||
+      (typeof visibleRaw === 'string' && visibleRaw.toLowerCase() === 'true') ||
+      (typeof visibleRaw === 'number' && visibleRaw === 1);
 
-      return {
-        key: clean(key),
-        title: clean(title),
-        seriesLabel: clean(seriesLabel),
-        regularBase,
-        saleBase,
-        saleActive,
-        saleLabel: clean(saleLabel),
-        effectivePrice,
-        visible
-      };
-    })
-    .filter(p => p.key && p.visible);
+    return {
+      key: clean(key),
+      title: clean(title),
+      seriesLabel: clean(seriesLabel),
+      regularBase,
+      saleBase,
+      saleActive,
+      saleLabel: clean(saleLabel),
+      effectivePrice,
+      visible
+    };
+  }).filter(p => p.key && p.visible);
 
   _cache.set(sheet, products);
   return products;
 }
 
-/**
- * Sort bar injected above each .card-grid.
- * initialField/initialDir ensure dropdowns match the actual current sort.
- */
 function makeSortBar(grid, fields, initialField, initialDir, onChange) {
   const bar = document.createElement('div');
   bar.className = 'lb-sortbar';
@@ -149,14 +160,13 @@ function makeSortBar(grid, fields, initialField, initialDir, onChange) {
     fieldSel.appendChild(opt);
   });
 
-  // Set initial field (fallback to first)
   fieldSel.value = fields.includes(initialField) ? initialField : (fields[0] || 'price');
 
   function rebuildDir() {
     const f = fieldSel.value;
     dirSel.innerHTML = '';
     const opts = [
-      { value: 'asc',  label: (f === 'price') ? 'Low → High' : 'A → Z' },
+      { value: 'asc', label: (f === 'price') ? 'Low → High' : 'A → Z' },
       { value: 'desc', label: (f === 'price') ? 'High → Low' : 'Z → A' }
     ];
     opts.forEach(o => {
@@ -168,8 +178,6 @@ function makeSortBar(grid, fields, initialField, initialDir, onChange) {
   }
 
   rebuildDir();
-
-  // Set initial direction (fallback asc)
   dirSel.value = (initialDir === 'desc') ? 'desc' : 'asc';
 
   if (fields.length === 1) fieldSel.style.display = 'none';
@@ -187,7 +195,6 @@ function makeSortBar(grid, fields, initialField, initialDir, onChange) {
   bar.appendChild(fieldSel);
   bar.appendChild(dirSel);
 
-  // Insert immediately before the grid
   grid.parentNode.insertBefore(bar, grid);
   return bar;
 }
@@ -277,21 +284,14 @@ async function init() {
 
     const fields = allowedSortFields(productsSheet);
 
-    // ✅ Defaults:
-    // - Necks: Name A→Z
-    // - Everything else: Price Low→High
     let field = String(productsSheet || '').toLowerCase().includes('neck') ? 'name' : 'price';
     let dir = 'asc';
-
-    // Safety: ensure default is allowed
     if (!fields.includes(field)) field = fields[0] || 'price';
 
-    // Initial render with default sort
     const initialSorted = models.slice();
     sortModels(initialSorted, field, dir);
     renderCards(grid, initialSorted, productsSheet, productPage, altNoun, imageRootAttr);
 
-    // Only add UI if there are 2+ models (avoid clutter on tiny grids)
     if (models.length >= 2) {
       makeSortBar(grid, fields, field, dir, (newField, newDir) => {
         field = newField || field;
