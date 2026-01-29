@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Privacy Policy | Lemon Banjos</title>
+
+<meta name="description" content="Read the Lemon Banjos Privacy Policy to learn what information is collected when you contact me, how it’s used, and your options for data removal.">
+
+<link rel="canonical" href="https://www.lemonbanjos.com/privacy.html">
+
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+</head>
+<body>
+  <div id="header"></div>
+
+  <section class="section">
+    <div class="container narrow">
+
+      <h1 class="section-title">Privacy Policy</h1>
+
+      <p class="text-center">
+        Lemon Banjos is a small, one-person workshop. I only collect the information I need to
+        respond to you, and I don’t use it for anything else.
+      </p>
+
+      <h2>Information I Collect</h2>
+      <p>
+        The only personal information I collect is what you choose to send me when you get in touch.
+        This may include:
+      </p>
+      <ul>
+        <li>Your name</li>
+        <li>Your email address</li>
+        <li>Your phone number (optional)</li>
+        <li>The contents of your message or inquiry</li>
+      </ul>
+
+      <p>
+        When you submit the contact form, some basic technical information (such as your IP address)
+        may also be processed automatically by the services that deliver the email or host this website.
+      </p>
+
+      <h2>How Your Information Is Used</h2>
+      <p>
+        I use the information you provide for one purpose:
+      </p>
+      <ul>
+        <li><strong>To respond to your message</strong> and follow up about custom builds, setup/repair work,
+          or warranty questions.</li>
+      </ul>
+
+      <p>
+        I do <strong>not</strong> sell, rent, or share your information with anyone for marketing or advertising.
+      </p>
+
+      <h2>Where Your Information Is Stored</h2>
+      <p>
+        I do not maintain a separate customer database or store form submissions on this website.
+        When you use the contact form, your message is delivered to my email inbox through EmailJS,
+        just like a normal email.
+      </p>
+
+      <p>
+        Aside from those email records, I do not keep additional copies of your information.
+      </p>
+
+      <h2>Third-Party Services</h2>
+      <p>
+        This site uses a few third-party services to function:
+      </p>
+      <ul>
+        <li><strong>EmailJS</strong> – sends contact form submissions to my email inbox.</li>
+        <li><strong>GitHub Pages</strong> – hosts this website.</li>
+      </ul>
+
+      <p>
+        These services may process basic technical data (such as IP addresses or browser information)
+        as part of normal web operations. They handle that data under their own privacy policies.
+      </p>
+
+      <h2>Your Choices and Data Removal</h2>
+      <p>
+        If you’d like me to remove your information, you can ask me to delete the email thread that
+        contains your message and contact details.
+      </p>
+
+      <p>
+        To request this, just email me at
+        <a href="mailto:hunter@lemonbanjos.com">hunter@lemonbanjos.com</a>.
+      </p>
+
+      <h2>Children’s Privacy</h2>
+      <p>
+        This website is not intended for children under 13, and I do not knowingly collect information
+        from anyone under 13 years of age.
+      </p>
+
+      <h2>Changes to This Policy</h2>
+      <p>
+        I may update this Privacy Policy from time to time if the tools or services used on this site change.
+        If that happens, the “Last updated” date below will be revised.
+      </p>
+
+      <p><em>Last updated: November 2025</em></p>
+
+      <h2>Contact</h2>
+      <p>If you have any questions about this Privacy Policy, you can reach me at:</p>
+      <p>
+        <strong>Hunter Lemon</strong><br>
+        Email: <a href="mailto:hunter@lemonbanjos.com">hunter@lemonbanjos.com</a><br>
+        Phone: <a href="tel:+13048712986">(304) 871-2986</a>
+      </p>
+
+    </div>
+  </section>
+
+  <div id="footer"></div>
+
+  <script>
+    function initHeaderFooter() {
+      return Promise.all([
+        fetch('header.html').then(r => r.text()).then(h => {
+          document.getElementById('header').innerHTML = h;
+        }),
+        fetch('footer.html').then(r => r.text()).then(f => {
+          document.getElementById('footer').innerHTML = f;
+        })
+      ]).then(() => {
+        const toggle = document.getElementById('menu-toggle');
+        const nav = document.getElementById('main-nav');
+        if (toggle && nav) {
+          toggle.addEventListener('click', () => {
+            const isOpen = nav.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+          });
+        }
+      });
+    }
+
+    initHeaderFooter().catch(console.error);
+  </script>
+</body>
+</html>

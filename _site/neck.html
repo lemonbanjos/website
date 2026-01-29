@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Loading…</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      emailjs.init({ publicKey: 'WYWVsQcBGt69SrK3u' });
+    });
+
+    window.LemonBanjo = window.LemonBanjo || {
+      _cfg: { id: '', series: '', model: '', base_price: 0, final_price: 0, selections: [] },
+      setConfig(cfg) { this._cfg = { ...this._cfg, ...cfg }; },
+      getConfig() { return this._cfg; }
+    };
+  </script>
+</head>
+
+<body>
+  <div id="header"></div>
+
+  <section class="product">
+    <div class="container">
+<div class="product-grid">
+
+  <!-- LEFT: Gallery (leave this exactly as-is) -->
+  <div class="product-gallery">
+    <div class="thumb-rail" role="list" id="thumbRail"></div>
+
+    <div class="main-image-wrapper">
+      <img alt="Neck — front" class="main-image" id="mainImage">
+    </div>
+  </div>
+
+  <!-- RIGHT: Wrapper only for text/price/options -->
+  <div class="product-info">
+    <div class="product-header-block">
+      <p id="seriesText">Loading…</p>
+      <h1 class="product-title" id="productTitle">Loading…</h1>
+    </div>
+
+    <div class="product-price-block">
+      <p id="productBasePrice" style="font-size: 0.85rem; opacity: 0.65; margin-bottom: -4px;"></p>
+      <h2><em id="productPrice" aria-live="polite">Loading…</em></h2>
+    </div>
+
+    <div class="product-details">
+      <div id="productOptions" aria-describedby="optionsHelp"></div>
+      <p id="optionsHelp" class="small mt-neg-8">Choose configuration to see updated price.</p>
+      <button class="button" id="askBtn" type="button">Ask About This Neck</button>
+    </div>
+  </div>
+
+</div>
+
+    </div>
+  </section>
+  <!-- end .product -->
+
+  <!-- Description section -->
+  <section class="description-section" id="descriptionSection">
+    <div class="container">
+      <h2>Description</h2>
+      <div class="product-description" id="productDescription"></div>
+    </div>
+  </section>
+
+  <section class="specs-section" id="specsSection">
+    <div class="container-wide">
+      <div class="specs-header">
+        <h2>Specifications</h2>
+
+        <button id="printSpecsBtn" class="print-specs-btn" type="button" aria-label="Print specifications">
+          🖨 Print Specs
+        </button>
+      </div>
+
+      <div id="specsGrid" class="specs-grid" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <div id="footer"></div>
+
+  <div class="lightbox" id="lightbox" aria-modal="true" role="dialog" aria-label="Image viewer">
+    <span class="close" aria-label="Close">&times;</span>
+    <span class="prev" aria-label="Previous">&#10094;</span>
+    <img id="lightboxImg" alt="">
+    <span class="next" aria-label="Next">&#10095;</span>
+  </div>
+
+  <!-- Email modal -->
+  <div class="lb-modal-backdrop" id="emailModalBackdrop" aria-hidden="true">
+    <div class="lb-modal" role="dialog" aria-modal="true" aria-labelledby="emailModalTitle">
+      <h3 id="emailModalTitle">Tell me how to reach you</h3>
+      <p class="lb-note">I’ll include your selected options and price automatically.</p>
+
+      <form id="emailForm">
+        <div class="lb-row">
+          <div>
+            <label for="custName">Name</label>
+            <input id="custName" name="custName" type="text" required placeholder="Your name">
+          </div>
+          <div>
+            <label for="custEmail">Email</label>
+            <input id="custEmail" name="custEmail" type="email" required placeholder="you@example.com">
+          </div>
+        </div>
+
+        <div class="lb-row">
+          <div>
+            <label for="custPhone">Phone</label>
+            <input id="custPhone" name="custPhone" type="tel" placeholder="(555) 123-4567">
+          </div>
+          <div>
+            <label for="custAddress">Address</label>
+            <input id="custAddress" name="custAddress" type="text" placeholder="Street address">
+          </div>
+        </div>
+
+        <div class="lb-row">
+          <div>
+            <label for="custCity">City</label>
+            <input id="custCity" name="custCity" type="text" placeholder="City">
+          </div>
+          <div>
+            <label for="custState">State</label>
+            <input id="custState" name="custState" type="text" placeholder="State">
+          </div>
+        </div>
+
+        <div class="lb-row">
+          <div>
+            <label for="custZip">ZIP Code</label>
+            <input id="custZip" name="custZip" type="text" placeholder="ZIP Code">
+          </div>
+        </div>
+
+        <div class="lb-row comments-row">
+          <div class="lb-comments-group">
+            <label for="custComments">Comments</label>
+            <textarea id="custComments" name="custComments" placeholder="Anything else you'd like me to know"></textarea>
+          </div>
+        </div>
+
+        <div id="emailStatus" class="lb-note lb-hidden" aria-live="polite"></div>
+
+        <div class="lb-actions">
+          <button type="button" class="lb-btn" id="cancelEmail">Cancel</button>
+          <button type="submit" class="lb-btn primary" id="sendEmail">Send</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Header/footer loader -->
+  <script>
+    function initHeaderFooter() {
+      return Promise.all([
+        fetch('header.html').then(r => r.text()).then(h => document.getElementById('header').innerHTML = h),
+        fetch('footer.html').then(r => r.text()).then(f => document.getElementById('footer').innerHTML = f)
+      ]).then(() => {
+        const toggle = document.getElementById('menu-toggle');
+        const nav = document.getElementById('main-nav');
+        if (toggle && nav) {
+          toggle.addEventListener('click', () => {
+            const isOpen = nav.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+          });
+        }
+      });
+    }
+    initHeaderFooter();
+  </script>
+
+<!-- Auto-set document title + H1 from sheet-driven content (always append "Neck") -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const titleEl = document.getElementById('productTitle');
+    const seriesEl = document.getElementById('seriesText');
+
+    function normalizeNeckTitle(raw) {
+      if (!raw) return '';
+      return raw.toLowerCase().endsWith(' neck')
+        ? raw
+        : `${raw} Neck`;
+    }
+
+    function syncTitle() {
+      if (!titleEl) return;
+
+      let rawTitle = (titleEl.textContent || '').trim();
+      if (!rawTitle) return;
+
+      const lower = rawTitle.toLowerCase();
+      if (lower === 'loading…' || lower === 'loading...') return;
+
+      // Ensure H1 includes "Neck"
+      const normalized = normalizeNeckTitle(rawTitle);
+
+      if (normalized !== rawTitle) {
+        titleEl.textContent = normalized;
+      }
+
+      const series = (seriesEl?.textContent || '').trim();
+
+      // Browser tab title
+      document.title =
+        series && !series.toLowerCase().startsWith('loading')
+          ? `${normalized} | ${series}`
+          : normalized;
+    }
+
+    syncTitle();
+
+    if (titleEl) {
+      new MutationObserver(syncTitle).observe(titleEl, {
+        childList: true,
+        subtree: true,
+        characterData: true
+      });
+    }
+
+    if (seriesEl) {
+      new MutationObserver(syncTitle).observe(seriesEl, {
+        childList: true,
+        subtree: true,
+        characterData: true
+      });
+    }
+  });
+</script>
+
+
+  <!-- Product routing (image paths) -->
+  <script>
+    function getProductKeyFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      return (params.get('key') || '').trim().toUpperCase();
+    }
+
+    function deriveImageInfo(key) {
+      const upper = key.toUpperCase();
+      const parts = upper.split('-');
+      const seriesKey = parts[0];
+      const modelCode = parts.slice(1).join('-');
+      let folder = 'necks';
+
+      // If you want necks to live somewhere else, change folder logic here
+      if (seriesKey.startsWith('LEGACY')) folder = seriesKey.replace('LEGACY','');
+      else if (seriesKey.startsWith('OLDTIME')) folder = 'oldtime';
+      else if (seriesKey.startsWith('MASTER')) folder = 'master';
+
+      return { folder, modelCode, modelSlug: modelCode.toLowerCase() };
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const key = getProductKeyFromUrl() || 'NECK-DEFAULT';
+      document.body.dataset.model = key;
+
+      const { folder, modelCode, modelSlug } = deriveImageInfo(key);
+      const base = `assets/product_images/${folder}/${modelSlug}/`;
+
+      const mainImg = document.getElementById('mainImage');
+      mainImg.src = base + 'front.webp';
+      mainImg.alt = `${modelCode} neck — front`;
+      mainImg.dataset.large = base + 'front.webp';
+
+      // If thumbs are created by neckInfo.js, this loop will just do nothing (safe).
+      const thumbMap = {
+        'thumb-front': 'front.webp',
+        'thumb-back': 'back.webp',
+        'thumb-headstock': 'headstockFront.webp',
+        'thumb-block': 'block.webp',
+        'thumb-side': 'side.webp'
+      };
+
+      document.querySelectorAll('.thumb-rail img').forEach(img => {
+        const file = thumbMap[img.dataset.role];
+        if (!file) return;
+        img.src = base + 'thumbnails/' + file;
+        img.dataset.large = base + file;
+      });
+
+      window.LemonBanjo.setConfig({ id: key, model: modelCode });
+    });
+  </script>
+
+  <!-- Inquiry email logic -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const openBtn = document.getElementById('askBtn');
+      const backdrop = document.getElementById('emailModalBackdrop');
+      const cancelBtn = document.getElementById('cancelEmail');
+      const form = document.getElementById('emailForm');
+      const statusEl = document.getElementById('emailStatus');
+
+      function openModal() { backdrop.style.display = 'flex'; }
+      function closeModal() { backdrop.style.display = 'none'; }
+
+      openBtn.addEventListener('click', openModal);
+      cancelBtn.addEventListener('click', closeModal);
+      backdrop.addEventListener('click', e => { if (e.target === backdrop) closeModal(); });
+
+      function setDisabled(disabled) {
+        form.classList.toggle('lb-disabled', disabled);
+        form.querySelectorAll('input,button,textarea').forEach(el => {
+          if (el.id !== 'cancelEmail') el.disabled = disabled;
+        });
+      }
+
+      function selectionsFromDOM() {
+        const out = [];
+        document.querySelectorAll('#productOptions .option-block').forEach(block => {
+          const group = block.querySelector('p')?.textContent.trim();
+          const sel = block.querySelector('select');
+
+          if (sel) {
+            let opt = sel.options[sel.selectedIndex].textContent
+              .replace(/\(\+.*\)$/,'')
+              .trim();
+
+            // Name Block: include custom text when Custom is selected
+            if (group && group.toLowerCase() === 'name block') {
+              const input = document.getElementById('nameBlockCustomInput');
+              const customText = (input?.value || '').trim();
+              if (opt.toLowerCase().startsWith('custom')) {
+                opt = customText ? `${opt} ("${customText}")` : `${opt} (no text entered)`;
+              }
+            }
+
+            out.push([group, opt]);
+            return;
+          }
+
+          const chosen = block.querySelector('input:checked');
+          if (chosen) {
+            const lab = block.querySelector(`label[for="${chosen.id}"]`);
+            out.push([group, lab.textContent.trim()]);
+          }
+        });
+
+        return out;
+      }
+
+      form.addEventListener('submit', async e => {
+        e.preventDefault();
+        setDisabled(true);
+
+        statusEl.classList.remove('lb-hidden');
+        statusEl.innerHTML = `<div class="lb-status"><span class="spinner"></span>Sending…</div>`;
+
+        const SERVICE_ID = 'service_wbxklc2';
+        const TEMPLATE_ID = 'contact_us';
+
+        try {
+          const cfg = LemonBanjo.getConfig();
+          const priceEl = document.getElementById('productPrice');
+
+          const ownerParams = {
+            from_name:  custName.value.trim(),
+            from_email: custEmail.value.trim(),
+            phone:      custPhone.value.trim(),
+            subject:    `Neck inquiry: ${cfg.model || ''}${cfg.series ? ` (${cfg.series})` : ''}`,
+            message:    [
+              `TYPE: Neck inquiry`,
+              `MODEL: ${cfg.model || ''}`,
+              `SERIES: ${cfg.series || ''}`,
+              `BASE PRICE: ${priceEl?.dataset?.base || ''}`,
+              `DISPLAYED PRICE: ${priceEl?.textContent || ''}`,
+              ``,
+              `SELECTIONS:`,
+              selectionsFromDOM().map(([g,v]) => `- ${g}: ${v}`).join('\n'),
+              ``,
+              `COMMENTS:`,
+              (custComments.value || '').trim() || '(none)',
+              ``,
+              `SHIPPING / LOCATION (optional):`,
+              `Address: ${custAddress.value.trim()}`,
+              `City: ${custCity.value.trim()}`,
+              `State: ${custState.value.trim()}`,
+              `ZIP: ${custZip.value.trim()}`
+            ].join('\n'),
+            address:    custAddress.value.trim(),
+            city:       custCity.value.trim(),
+            state:      custState.value.trim(),
+            zip:        custZip.value.trim(),
+            comments:   (custComments.value || '').trim(),
+            model:      cfg.model,
+            series:     cfg.series || '',
+            base_price: priceEl?.dataset?.base || '',
+            final_price: priceEl?.textContent || '',
+            selections: selectionsFromDOM().map(([g,v]) => `${g}: ${v}`).join('\n'),
+            page_url: window.location.href,
+            reply_to: custEmail.value.trim()
+          };
+
+          await emailjs.send(SERVICE_ID, TEMPLATE_ID, ownerParams);
+
+          statusEl.innerHTML = `<div class="lb-status success">
+            <span class="check"></span>
+            <span>Thanks! I’ve received your info and will be in touch soon.</span>
+          </div>`;
+
+          setTimeout(() => {
+            form.reset();
+            setDisabled(false);
+            closeModal();
+          }, 3000);
+
+        } catch (err) {
+          statusEl.innerHTML = `<div class="lb-status error">Sorry—could not send. Please try again.</div>`;
+          setDisabled(false);
+        }
+      });
+    });
+  </script>
+
+  <script src="assets/js/neckInfo.js"></script>
+  <script src="assets/js/galleryLightbox.js" defer></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const btn = document.getElementById("printSpecsBtn");
+      if (btn) btn.addEventListener("click", () => window.print());
+    });
+  </script>
+
+</body>
+</html>

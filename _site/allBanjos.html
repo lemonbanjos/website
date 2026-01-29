@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>All Banjos | Lemon Banjo & Supply</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <title>All Banjo Models | Lemon Banjos</title>
+  <meta name="description" content="Browse every banjo built by Lemon Banjos — open-back old-time instruments, resonator bluegrass models, and custom builds. Hand-crafted in West Virginia.">
+  <link rel="canonical" href="https://www.lemonbanjos.com/allBanjos.html">
+
+</head>
+<body>
+  <div id="header"></div>
+
+  <section class="section">
+    <div class="container narrow">
+      <h1 class="section-title">All Lemon Banjos</h1>
+      <p class="text-center">
+        Every model currently offered by Lemon Banjos –
+        from old-time open-backs to bluegrass cannons – all in one place.
+      </p>
+    </div>
+
+    <div class="container">
+      <!-- This grid will dynamically load EVERY model from the Banjos sheet -->
+      <div class="card-grid" id="all-banjos-grid" data-all-banjos="true">
+		<div class="loading-message">Tuning banjos...</div>
+	  </div>
+    </div>
+  </section>
+
+  <div id="footer"></div>
+
+  <!-- Dynamic card builder (handles series pages *and* this all-banjos page) -->
+  <script src="assets/js/seriesCards.js"></script>
+
+  <!-- Same header/footer init pattern as your Legacy page -->
+  <script>
+    function initHeaderFooter() {
+      return Promise.all([
+        fetch('header.html').then(r => r.text()).then(h => {
+          document.getElementById('header').innerHTML = h;
+        }),
+        fetch('footer.html').then(r => r.text()).then(f => {
+          document.getElementById('footer').innerHTML = f;
+        })
+      ]).then(() => {
+        const toggle = document.getElementById('menu-toggle');
+        const nav = document.getElementById('main-nav');
+        if (toggle && nav) {
+          toggle.addEventListener('click', () => {
+            const isOpen = nav.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+          });
+        }
+      });
+    }
+
+    initHeaderFooter().catch(console.error);
+  </script>
+</body>
+</html>
