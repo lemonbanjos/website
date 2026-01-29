@@ -1,102 +1,96 @@
-// LemonBanjos seriesCards.js (with sorting) - build 2026-01-29-1
-// Sort defaults:
-//  - Necks: Name A → Z
-//  - Everything else: Price Low → High
+// =======================================================
+//  Series Cards Loader (Google Sheets Driven) + Sorting UI
+//  - Builds cards for each .card-grid
+//  - Reads from a "products" sheet (default: Banjos)
+//
+//  Expected columns on the products sheet:
+//      A:key, B:title, C:Series Label,
+//      D:base_price (regular), E:sale_price, F:sale_label, G:sale_active,
+//      K:visible (TRUE/FALSE/1/0)
+//
+//  - Derives image path from data-image-root + key
+//  - Shows sale pricing (struck-through regular + sale)
+//  - Adds per-page sorting:
+//      * Necks: default Name A→Z, can sort by Name or Price (asc/desc)
+//      * Others: default Price Low→High, can sort by Price (asc/desc)
 // =======================================================
 
 const SHEET_ID = '1JaKOJLDKDgEvIg54UKKg2J3fftwOsZlKBw1j5qjeheU';
 
-// Use a proxy that works reliably on GitHub Pages.
-// (corsproxy.io often returns 403 from GitHub Pages.)
-function proxyUrl(rawUrl) {
-  return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawUrl);
-}
+const GVIZ_SERIES = (sheet, tq) =>
+  'https://corsproxy.io/?' +
+  'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?' +
+  new URLSearchParams({ sheet, tq }).toString();
 
-function gvizUrl(sheet, tq) {
-  const raw =
-    'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?' +
-    new URLSearchParams({ sheet, tq }).toString();
-  return proxyUrl(raw);
-}
+const rowsSeries = t => (t?.rows || []).map(r => (r.c || []).map(c => c?.v ?? null));
 
-const rows = t => (t?.rows || []).map(r => (r.c || []).map(c => c?.v ?? null));
-const clean = v => (v == null ? '' : String(v).replace(/\u00a0/g, ' ').trim());
-const fmtUSD = n =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(n) || 0);
+const cleanStrSeries = v =>
+  (v == null ? '' : String(v).replace(/\u00a0/g, ' ').trim());
 
-async function gvizQuery(sheet, tq) {
-  const res = await fetch(gvizUrl(sheet, tq));
+const fmtUSDSeries = n =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
+    .format(Number(n) || 0);
+
+async function gvizQuerySeries(sheet, tq) {
+  // Keep your original behavior
+  const res = await fetch(GVIZ_SERIES(sheet, tq), { cache: 'no-store' });
   const txt = await res.text();
-
-  // GViz responses look like: google.visualization.Query.setResponse({...});
-  // Guard against proxy returning HTML/errors.
-  if (!txt.includes('google.visualization.Query')) {
-    throw new Error(`GViz response not detected for sheet="${sheet}". First 120 chars: ${txt.slice(0, 120)}`);
-  }
-
   const json = JSON.parse(txt.substring(47).slice(0, -2));
   return json.table;
 }
 
+/**
+ * Given a product key like "LEGACY35-LB-00" and an imageRoot like
+ * "assets/product_images/35", return the path to the first numbered image:
+ *
+ *   "assets/product_images/35/lb-00/1.webp"
+ *
+ * Adjust slugging here if your folder naming changes.
+ */
 function buildImagePath(key, imageRoot) {
-  const safeRoot = String(imageRoot || '').replace(/\/+$/, '');
-  const parts = String(key || '').split('-');
+  const safeRoot = imageRoot.replace(/\/+$/, ''); // trim trailing slashes
+  const parts = String(key).split('-');           // ["LEGACY35","LB","00"]
   let slug;
 
-  if (parts.length >= 3) slug = (parts[1] + '-' + parts[2]).toLowerCase();
-  else if (parts.length === 2) slug = parts[1].toLowerCase();
-  else slug = String(key || '').toLowerCase();
+  if (parts.length >= 3) {
+    slug = (parts[1] + '-' + parts[2]).toLowerCase();
+  } else if (parts.length === 2) {
+    slug = parts[1].toLowerCase();
+  } else {
+    slug = String(key).toLowerCase();
+  }
 
+  // Use the first numbered image for grid cards
   return `${safeRoot}/${slug}/1.webp`;
 }
 
-function inferImageRoot(productsSheet, key) {
-  const sheetLower = String(productsSheet || '').toLowerCase();
-  const k = String(key || '');
+// Cache products per sheet so we don't fetch the same sheet multiple times
+const _productsCache = new Map();
 
-  if (sheetLower.includes('neck')) return 'assets/product_images/necks';
-  if (k.startsWith('LEGACY35')) return 'assets/product_images/35';
-  if (k.startsWith('LEGACY54')) return 'assets/product_images/54';
-  if (k.startsWith('MASTER')) return 'assets/product_images/master';
-  if (k.startsWith('OLDTIME')) return 'assets/product_images/oldtime';
-  return 'assets/product_images';
-}
+/**
+ * Load products from a given sheet name (e.g., "Banjos" or "Necks")
+ */
+async function getProductsFromSheet(productsSheet) {
+  const sheetName = cleanStrSeries(productsSheet) || 'Banjos';
+  if (_productsCache.has(sheetName)) return _productsCache.get(sheetName);
 
-function allowedSortFields(productsSheet) {
-  return String(productsSheet || '').toLowerCase().includes('neck')
-    ? ['price', 'name']
-    : ['price'];
-}
+  // NOTE: visible is in column K, so we select it explicitly
+  const prodTable = await gvizQuerySeries(sheetName, 'select A,B,C,D,E,F,G,K');
 
-function sortModels(models, field, dir) {
-  const mul = dir === 'desc' ? -1 : 1;
-
-  if (field === 'name') {
-    models.sort((a, b) => {
-      const at = (a.title || a.key || '').toString();
-      const bt = (b.title || b.key || '').toString();
-      return at.localeCompare(bt, undefined, { numeric: true, sensitivity: 'base' }) * mul;
-    });
-  } else {
-    models.sort((a, b) => ((a.effectivePrice || 0) - (b.effectivePrice || 0)) * mul);
-  }
-}
-
-// In-memory cache so multiple grids on the same page don't refetch
-const _cache = new Map();
-
-async function getProducts(productsSheet) {
-  const sheet = clean(productsSheet) || 'Banjos';
-  if (_cache.has(sheet)) return _cache.get(sheet);
-
-  // A:key B:title C:series_label D:base E:sale F:sale_label G:sale_active K:visible
-  const table = await gvizQuery(sheet, 'select A,B,C,D,E,F,G,K');
-
-  const products = rows(table).map(r => {
-    const [key, title, seriesLabel, basePrice, salePrice, saleLabel, saleActiveRaw, visibleRaw] = r;
+  const products = rowsSeries(prodTable).map(row => {
+    const [
+      key,
+      title,
+      seriesLabel,
+      basePrice,
+      salePrice,
+      saleLabel,
+      saleActiveRaw,
+      visibleRaw
+    ] = row;
 
     const regularBase = Number(basePrice || 0);
-    const saleBase = Number(salePrice || 0);
+    const saleBase    = Number(salePrice || 0);
 
     const saleActive =
       !!(
@@ -107,32 +101,91 @@ async function getProducts(productsSheet) {
 
     const effectivePrice = saleActive ? saleBase : regularBase;
 
+    // Treat null/blank as "visible"
     const visible =
-      visibleRaw == null ||
+      visibleRaw == null ||           // default: show if cell is empty
       visibleRaw === true ||
       (typeof visibleRaw === 'string' && visibleRaw.toLowerCase() === 'true') ||
       (typeof visibleRaw === 'number' && visibleRaw === 1);
 
     return {
-      key: clean(key),
-      title: clean(title),
-      seriesLabel: clean(seriesLabel),
+      key: cleanStrSeries(key),
+      title: cleanStrSeries(title),
+      seriesLabel: cleanStrSeries(seriesLabel),
       regularBase,
       saleBase,
       saleActive,
-      saleLabel: clean(saleLabel),
+      saleLabel: cleanStrSeries(saleLabel),
       effectivePrice,
       visible
     };
-  }).filter(p => p.key && p.visible);
+  }).filter(p => p.key && p.visible); // only show visible models
 
-  _cache.set(sheet, products);
+  _productsCache.set(sheetName, products);
   return products;
 }
 
-function makeSortBar(grid, fields, initialField, initialDir, onChange) {
+/**
+ * Try to pick a reasonable default image root when none is provided.
+ * You can override per-grid by setting data-image-root on the .card-grid element.
+ */
+function inferImageRoot({ productsSheet, key }) {
+  const sheetLower = String(productsSheet || '').toLowerCase();
+  const k = String(key || '');
+
+  // If you're on the Necks sheet, default to a necks folder.
+  if (sheetLower.includes('neck')) return 'assets/product_images/necks';
+
+  // Otherwise, keep your existing banjo heuristics by key prefix.
+  if (k.startsWith('LEGACY35')) return 'assets/product_images/35';
+  if (k.startsWith('LEGACY54')) return 'assets/product_images/54';
+  if (k.startsWith('MASTER'))   return 'assets/product_images/master';
+  if (k.startsWith('OLDTIME'))  return 'assets/product_images/oldtime';
+
+  // Fallback
+  return 'assets/product_images';
+}
+
+// ---------- Sorting helpers ----------
+
+function isNecksSheet(productsSheet) {
+  return String(productsSheet || '').toLowerCase().includes('neck');
+}
+
+function allowedSortFields(productsSheet) {
+  // Necks: name + price. Others: price only.
+  return isNecksSheet(productsSheet) ? ['name', 'price'] : ['price'];
+}
+
+function defaultSort(productsSheet) {
+  // Necks default: Name A→Z. Others: Price Low→High.
+  return isNecksSheet(productsSheet)
+    ? { field: 'name', dir: 'asc' }
+    : { field: 'price', dir: 'asc' };
+}
+
+function sortModels(models, field, dir) {
+  const mul = (dir === 'desc') ? -1 : 1;
+
+  if (field === 'name') {
+    models.sort((a, b) => {
+      const at = (a.title || a.key || '').toString();
+      const bt = (b.title || b.key || '').toString();
+      return at.localeCompare(bt, undefined, { numeric: true, sensitivity: 'base' }) * mul;
+    });
+    return;
+  }
+
+  // price
+  models.sort((a, b) => ((a.effectivePrice || 0) - (b.effectivePrice || 0)) * mul);
+}
+
+function buildSortBar(grid, productsSheet, sortState, onChange) {
+  const fields = allowedSortFields(productsSheet);
+
   const bar = document.createElement('div');
   bar.className = 'lb-sortbar';
+  // Inline styling so you don’t need CSS changes
   bar.style.display = 'flex';
   bar.style.gap = '10px';
   bar.style.alignItems = 'center';
@@ -153,6 +206,7 @@ function makeSortBar(grid, fields, initialField, initialDir, onChange) {
   dirSel.style.padding = '6px 8px';
   dirSel.style.borderRadius = '8px';
 
+  // Field options
   fields.forEach(f => {
     const opt = document.createElement('option');
     opt.value = f;
@@ -160,15 +214,24 @@ function makeSortBar(grid, fields, initialField, initialDir, onChange) {
     fieldSel.appendChild(opt);
   });
 
-  fieldSel.value = fields.includes(initialField) ? initialField : (fields[0] || 'price');
+  // Set default field
+  fieldSel.value = fields.includes(sortState.field) ? sortState.field : fields[0];
 
-  function rebuildDir() {
-    const f = fieldSel.value;
+  function rebuildDirOptions() {
     dirSel.innerHTML = '';
-    const opts = [
-      { value: 'asc', label: (f === 'price') ? 'Low → High' : 'A → Z' },
-      { value: 'desc', label: (f === 'price') ? 'High → Low' : 'Z → A' }
-    ];
+    const f = fieldSel.value;
+
+    const opts =
+      (f === 'price')
+        ? [
+            { value: 'asc',  label: 'Low → High' },
+            { value: 'desc', label: 'High → Low' }
+          ]
+        : [
+            { value: 'asc',  label: 'A → Z' },
+            { value: 'desc', label: 'Z → A' }
+          ];
+
     opts.forEach(o => {
       const opt = document.createElement('option');
       opt.value = o.value;
@@ -177,18 +240,26 @@ function makeSortBar(grid, fields, initialField, initialDir, onChange) {
     });
   }
 
-  rebuildDir();
-  dirSel.value = (initialDir === 'desc') ? 'desc' : 'asc';
+  rebuildDirOptions();
 
+  // Set default direction (must be after rebuildDirOptions)
+  dirSel.value = (sortState.dir === 'desc') ? 'desc' : 'asc';
+
+  // If only price is allowed, hide the field selector
   if (fields.length === 1) fieldSel.style.display = 'none';
 
   fieldSel.addEventListener('change', () => {
-    rebuildDir();
-    onChange(fieldSel.value, dirSel.value);
+    sortState.field = fieldSel.value;
+    rebuildDirOptions();
+    // keep direction if possible, else default to asc
+    sortState.dir = (sortState.dir === 'desc') ? 'desc' : 'asc';
+    dirSel.value = sortState.dir;
+    onChange();
   });
 
   dirSel.addEventListener('change', () => {
-    onChange(fieldSel.value, dirSel.value);
+    sortState.dir = dirSel.value;
+    onChange();
   });
 
   bar.appendChild(label);
@@ -203,108 +274,132 @@ function clearCards(grid) {
   grid.querySelectorAll('.card-link-wrapper').forEach(n => n.remove());
 }
 
-function renderCards(grid, models, productsSheet, productPage, altNoun, imageRootAttr) {
-  clearCards(grid);
+// ---------- Main ----------
 
-  models.forEach(p => {
-    const href = `${productPage}?key=${encodeURIComponent(p.key)}`;
-    const imageRoot = imageRootAttr || inferImageRoot(productsSheet, p.key);
-    const imgSrc = buildImagePath(p.key, imageRoot);
+async function initSeriesCards() {
+  const grids = Array.from(document.querySelectorAll('.card-grid'));
+  if (!grids.length) return;
 
-    const link = document.createElement('a');
-    link.href = href;
-    link.className = 'card-link-wrapper';
-
-    const card = document.createElement('article');
-    card.className = 'card';
-
-    const img = document.createElement('img');
-    img.loading = 'lazy';
-    img.src = imgSrc;
-    img.alt = `${p.seriesLabel || 'Lemon'} ${p.title || p.key} ${altNoun}`;
-    img.className = 'card-img';
-
-    const body = document.createElement('div');
-    body.className = 'card-body';
-
-    if (p.seriesLabel) {
-      const seriesEl = document.createElement('div');
-      seriesEl.className = 'card-series';
-      seriesEl.textContent = p.seriesLabel;
-      body.appendChild(seriesEl);
-    }
-
-    const h3 = document.createElement('h3');
-    h3.className = 'card-title';
-    h3.textContent = p.title || p.key;
-
-    const price = document.createElement('p');
-    price.className = 'card-price';
-
-    if (p.saleActive && p.saleBase > 0) {
-      price.innerHTML = `
-        <span class="card-price-original card-price-strike">Starting at ${fmtUSD(p.regularBase)}</span>
-        <span class="card-price-sale">Now ${fmtUSD(p.saleBase)}</span>
-      `;
-    } else {
-      price.textContent = p.regularBase ? `Starting at ${fmtUSD(p.regularBase)}` : '';
-    }
-
-    body.appendChild(h3);
-    body.appendChild(price);
-    card.appendChild(img);
-    card.appendChild(body);
-    link.appendChild(card);
-    grid.appendChild(link);
-  });
-}
-
-async function init() {
-  const grids = [...document.querySelectorAll('.card-grid')];
-
+  // Process each grid independently (so different grids can point at different sheets)
   for (const grid of grids) {
-    const productsSheet = clean(grid.dataset.productsSheet || '') || 'Banjos';
-    const productPage = clean(grid.dataset.productPage || '') || 'banjo.html';
-    const altNoun = clean(grid.dataset.altNoun || '') || 'banjo';
-    const prefix = clean(grid.dataset.seriesPrefix || '').toUpperCase();
+    // Default to Banjos to match your renamed sheet
+    const productsSheet = cleanStrSeries(grid.dataset.productsSheet || '') || 'Banjos';
+    const productPage   = cleanStrSeries(grid.dataset.productPage || '') || 'banjo.html';
+    const altNoun       = cleanStrSeries(grid.dataset.altNoun || '') || 'banjo';
+
+    const prefix = cleanStrSeries(grid.dataset.seriesPrefix || '').toUpperCase();
+
+    // Support a few flags (backwards compatible)
     const allMode =
       grid.dataset.allProducts === 'true' ||
       grid.dataset.allBanjos === 'true' ||
       grid.dataset.allNecks === 'true';
-    const imageRootAttr = clean(grid.dataset.imageRoot || '');
 
+    const imageRootAttr = cleanStrSeries(grid.dataset.imageRoot || '');
+
+    // Pull products from the sheet this grid points to
+    const allProducts = await getProductsFromSheet(productsSheet);
+
+    let baseModels;
+    if (allMode) {
+      baseModels = allProducts.slice(); // copy all
+    } else if (prefix) {
+      baseModels = allProducts.filter(p => p.key.toUpperCase().startsWith(prefix + '-'));
+    } else {
+      continue; // nothing to do
+    }
+
+    // Remove loading message
     grid.querySelectorAll('.loading-message').forEach(m => m.remove());
 
-    const all = await getProducts(productsSheet);
+    // Sort state + UI
+    const sortState = defaultSort(productsSheet);
 
-    let models = [];
-    if (allMode) models = all.slice();
-    else if (prefix) models = all.filter(p => p.key.toUpperCase().startsWith(prefix + '-'));
-    else continue;
+    const render = () => {
+      // use the same underlying set, always re-copy so we don't mutate the base list
+      const models = baseModels.slice();
+      sortModels(models, sortState.field, sortState.dir);
 
-    const fields = allowedSortFields(productsSheet);
+      clearCards(grid);
 
-    let field = String(productsSheet || '').toLowerCase().includes('neck') ? 'name' : 'price';
-    let dir = 'asc';
-    if (!fields.includes(field)) field = fields[0] || 'price';
+      for (const p of models) {
+        const href = `${productPage}?key=${encodeURIComponent(p.key)}`;
+        const aria = `View ${p.seriesLabel || ''} ${p.title || p.key}`;
 
-    const initialSorted = models.slice();
-    sortModels(initialSorted, field, dir);
-    renderCards(grid, initialSorted, productsSheet, productPage, altNoun, imageRootAttr);
+        // Determine image root
+        const imageRoot = imageRootAttr || inferImageRoot({ productsSheet, key: p.key });
+        const imgSrc = buildImagePath(p.key, imageRoot);
 
-    if (models.length >= 2) {
-      makeSortBar(grid, fields, field, dir, (newField, newDir) => {
-        field = newField || field;
-        dir = newDir || dir;
+        const link = document.createElement('a');
+        link.href = href;
+        link.className = 'card-link-wrapper';
+        link.setAttribute('aria-label', aria);
 
-        const copy = models.slice();
-        sortModels(copy, field, dir);
-        renderCards(grid, copy, productsSheet, productPage, altNoun, imageRootAttr);
-      });
+        const article = document.createElement('article');
+        article.className = 'card';
+        article.dataset.modelKey = p.key;
+
+        const img = document.createElement('img');
+        img.loading = 'lazy';
+        img.src = imgSrc;
+        img.alt = `${p.seriesLabel || 'Lemon'} ${p.title || p.key} ${altNoun}`;
+        img.className = 'card-img';
+
+        const body = document.createElement('div');
+        body.className = 'card-body';
+
+        if (p.seriesLabel) {
+          const seriesEl = document.createElement('div');
+          seriesEl.className = 'card-series';
+          seriesEl.textContent = p.seriesLabel;
+          body.appendChild(seriesEl);
+        }
+
+        const h3 = document.createElement('h3');
+        h3.className = 'card-title';
+        h3.textContent = p.title || p.key;
+
+        const priceP = document.createElement('p');
+        priceP.className = 'card-price';
+
+        if (p.saleActive && p.saleBase > 0) {
+          priceP.innerHTML = `
+            <span class="card-price-original card-price-strike">
+              Starting at ${fmtUSDSeries(p.regularBase)}
+            </span>
+            <span class="card-price-sale">
+              Now ${fmtUSDSeries(p.saleBase)}
+            </span>
+          `;
+        } else {
+          priceP.textContent = p.regularBase
+            ? `Starting at ${fmtUSDSeries(p.regularBase)}`
+            : '';
+        }
+
+        body.appendChild(h3);
+        body.appendChild(priceP);
+
+        article.appendChild(img);
+        article.appendChild(body);
+        link.appendChild(article);
+        grid.appendChild(link);
+      }
+    };
+
+    // Add sort UI (only if at least 2 items)
+    if (baseModels.length >= 2) {
+      buildSortBar(grid, productsSheet, sortState, render);
     }
+
+    // Initial render
+    render();
   }
 }
 
+// Kick it off on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
-  init().catch(err => console.error('seriesCards init failed', err));
+  initSeriesCards().catch(err => {
+    console.error('Error initializing series cards', err);
+  });
 });
