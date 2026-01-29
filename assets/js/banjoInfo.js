@@ -11,81 +11,43 @@ const SHEETS = {
   options:  'Banjo_Options',
   specs:    'Banjo_Specs'
 };
-// Fast GViz fetch with fallback proxies + TTL cache.
-// - Avoids horrific load times from forced no-cache.
-// - Avoids GitHub Pages breakage when a proxy returns 403/HTML.
-// - Use ?fresh=1 to bypass cache instantly.
-const LEMON_TTL_MS = 300000; // ms
-const LEMON_FORCE_FRESH = new URLSearchParams(window.location.search).has('fresh');
+const GVIZ = (sheet, tq) => {
+  const base = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?' +
+    new URLSearchParams({ sheet, tq }).toString();
+  return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(base);
+};
 
-function buildGvizSourceUrl(sheet, tq) {
-  return (
-    'https://docs.google.com/spreadsheets/d/' +
-    SHEET_ID +
-    '/gviz/tq?' +
-    new URLSearchParams({ sheet, tq }).toString()
-  );
-}
+const rows = t => (t?.rows || []).map(r => (r.c || []).map(c => c?.v ?? null));
 
-const GVIZ_PROXIES = [
-  // allorigins is often reliable for GitHub Pages (adds permissive CORS headers)
-  (u) => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
-  // corsproxy sometimes blocks GitHub Pages, but keep as a fallback
-  (u) => 'https://corsproxy.io/?' + u,
-  // another public CORS proxy fallback
-  (u) => 'https://cors.isomorphic-git.org/' + u
-];
+const cleanStr = v =>
+  (v == null ? '' : String(v).replace(/\u00a0/g, ' ').trim());
 
-function isValidGvizResponse(txt) {
-  return typeof txt === 'string' && txt.includes('google.visualization.Query');
-}
+const fmtUSD = n =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
+    .format(Number(n) || 0);
 
-function gvizCacheKey(sheet, tq) {
-  return `lb_gviz:${SHEET_ID}:${sheet}:${tq}`;
-}
+// ---------- KEY / MODEL ----------
 
-async function fetchGvizText(sheet, tq) {
-  const sourceUrl = buildGvizSourceUrl(sheet, tq);
-  const key = gvizCacheKey(sheet, tq);
-
-  if (!LEMON_FORCE_FRESH) {
-    try {
-      const cached = localStorage.getItem(key);
-      if (cached) {
-        const obj = JSON.parse(cached);
-        if (obj && obj.t && obj.txt && (Date.now() - obj.t) < LEMON_TTL_MS && isValidGvizResponse(obj.txt)) {
-          return obj.txt; // ✅ instant
-        }
-      }
-    } catch (_) {}
+function getModelKey() {
+  const params = new URLSearchParams(window.location.search);
+  const keyFromUrl = params.get('key');
+  if (keyFromUrl && keyFromUrl.trim()) {
+    return keyFromUrl.trim();
   }
-
-  let lastErr = null;
-
-  for (const wrap of GVIZ_PROXIES) {
-    try {
-      const url = wrap(sourceUrl);
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const txt = await res.text();
-      if (!isValidGvizResponse(txt)) throw new Error('Not a GViz response');
-      if (!LEMON_FORCE_FRESH) {
-        try {
-          localStorage.setItem(key, JSON.stringify({ t: Date.now(), txt }));
-        } catch (_) {}
-      }
-      return txt;
-    } catch (e) {
-      lastErr = e;
-      // try next proxy
-    }
+  const bodyKey = document.body?.dataset?.modelKey;
+  if (bodyKey && bodyKey.trim()) {
+    return bodyKey.trim();
   }
-
-  throw lastErr || new Error('All GViz proxies failed');
+  console.warn('No ?key= provided, defaulting to LEGACY35-LB-00');
+  return 'LEGACY35-LB-00';
 }
+
+const MODEL = getModelKey();
 
 async function gvizQuery(sheet, tq) {
-  const txt = await fetchGvizText(sheet, tq);
+  const url = GVIZ(sheet, tq);
+  const res = await fetch(url);
+  const txt = await res.text();
   const json = JSON.parse(txt.substring(47).slice(0, -2));
   return json.table;
 }
