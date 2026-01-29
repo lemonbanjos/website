@@ -11,11 +11,10 @@ const SHEETS = {
   options:  'Banjo_Options',
   specs:    'Banjo_Specs'
 };
-const GVIZ = (sheet, tq) => {
-  const base = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?' +
-    new URLSearchParams({ sheet, tq }).toString();
-  return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(base);
-};
+const GVIZ = (sheet, tq) =>
+  'https://corsproxy.io/?' +
+  'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?' +
+  new URLSearchParams({ sheet, tq }).toString();
 
 const rows = t => (t?.rows || []).map(r => (r.c || []).map(c => c?.v ?? null));
 
@@ -46,7 +45,7 @@ const MODEL = getModelKey();
 
 async function gvizQuery(sheet, tq) {
   const url = GVIZ(sheet, tq);
-  const res = await fetch(url);
+  const res = await fetch(url, { cache: 'no-store' });
   const txt = await res.text();
   const json = JSON.parse(txt.substring(47).slice(0, -2));
   return json.table;

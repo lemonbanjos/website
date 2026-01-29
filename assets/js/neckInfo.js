@@ -11,11 +11,10 @@ const SHEETS = {
   options:  'Neck_Options',
   specs:    'Neck_Specs'
 };
-const GVIZ = (sheet, tq) => {
-  const base = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?' +
-    new URLSearchParams({ sheet, tq }).toString();
-  return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(base);
-};
+const GVIZ = (sheet, tq) =>
+  'https://corsproxy.io/?' +
+  'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?' +
+  new URLSearchParams({ sheet, tq }).toString();
 
 const rows = t => (t?.rows || []).map(r => (r.c || []).map(c => c?.v ?? null));
 
@@ -25,21 +24,6 @@ const cleanStr = v =>
 const fmtUSD = n =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
     .format(Number(n) || 0);
-
-// ---------- DISPLAY TITLE HELPERS (NECK PAGES) ----------
-// Keep the sheet title clean, but on neck pages we always show "Neck"
-// in the H1, specs headings, and inquiry email payload.
-
-function normalizeNeckTitle(raw) {
-  const t = cleanStr(raw);
-  if (!t) return '';
-  return t.toLowerCase().endsWith(' neck') ? t : `${t} Neck`;
-}
-
-function getDisplayTitle(product) {
-  const base = product?.title || product?.model_id || '';
-  return normalizeNeckTitle(base) || base;
-}
 
 // ---------- KEY / MODEL ----------
 
@@ -61,7 +45,7 @@ const MODEL = getModelKey();
 
 async function gvizQuery(sheet, tq) {
   const url = GVIZ(sheet, tq);
-  const res = await fetch(url);
+  const res = await fetch(url, { cache: 'no-store' });
   const txt = await res.text();
   const json = JSON.parse(txt.substring(47).slice(0, -2));
   return json.table;
@@ -275,17 +259,16 @@ function renderHeader(product) {
   const seriesEl = document.getElementById('seriesText');
   const titleEl = document.getElementById('productTitle');
 
-  const displayTitle = getDisplayTitle(product);
-
   if (seriesEl) {
     seriesEl.textContent = product.series || 'Lemon Banjos';
   }
   if (titleEl) {
-    titleEl.textContent = displayTitle || product.model_id;
+    titleEl.textContent = product.title || product.model_id;
   }
 
-  // Let the page-level observer build the final <title>, but set a sane fallback.
-  if (displayTitle) document.title = displayTitle;
+  if (product.title) {
+    document.title = `${product.title} | Lemon Banjo`;
+  }
 }
 
 function renderDescription(product) {
@@ -298,7 +281,7 @@ const desc = cleanStr(product.description);
 
 // ⭐ Only remove the word "series" for this heading
 const series = cleanStr(product.series).replace(/series/i, '').trim();
-const name = getDisplayTitle(product) || product.model_id || 'Description';
+const name = product.title || product.model_id || 'Description';
 const fullName = series ? `${series} ${name}` : name;
 
 if (desc) {
@@ -620,7 +603,7 @@ function renderSpecs(specs) {
  if (specsHeader && LemonState?.product) {
   // ⭐ Only remove the word "series" for this heading
   const series = cleanStr(LemonState.product.series).replace(/series/i, '').trim();
-  const name = getDisplayTitle(LemonState.product) || LemonState.product.model_id || 'Specifications';
+  const name = LemonState.product.title || LemonState.product.model_id || 'Specifications';
   const fullName = series ? `${series} ${name}` : name;
 
   specsHeader.textContent = `${fullName} — Specifications`;
@@ -878,8 +861,6 @@ function updateEmailConfig() {
   const p = LemonState.product;
   if (!p || typeof window.LemonBanjo === 'undefined') return;
 
-  const displayTitle = getDisplayTitle(p);
-
   const priceEl = document.getElementById('productPrice');
   const priceText = priceEl ? priceEl.textContent : '';
   const basePrice = p.base_price;
@@ -919,9 +900,8 @@ function updateEmailConfig() {
 
   window.LemonBanjo.setConfig({
     id: p.model_id || MODEL,
-    // Use a human-friendly model name everywhere (always includes "Neck")
-    model: displayTitle || p.model_id || '',
-    title: displayTitle || p.title || '',
+    model: p.model_id || '',
+    title: p.title || '',
     series: p.series || '',
     base_price: basePrice,
     final_price: finalPriceNum,
