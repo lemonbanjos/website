@@ -11,10 +11,53 @@ const SHEETS = {
   options:  'Banjo_Options',
   specs:    'Banjo_Specs'
 };
-const GVIZ = (sheet, tq) =>
+// -------------------------------------------------------
+// GViz fetch + caching (fast loads, still updates)
+// - Uses localStorage TTL cache
+// - Add ?fresh=1 to bypass cache immediately
+// -------------------------------------------------------
+const LEMON_TTL_MS = 300000; // ms
+const LEMON_FRESH = new URLSearchParams(location.search).has('fresh');
+
+const GVIZ_BASE =
   'https://corsproxy.io/?' +
-  'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?' +
-  new URLSearchParams({ sheet, tq, _cb: Date.now()}).toString();
+  'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?';
+
+const GVIZ = (sheet, tq) =>
+  GVIZ_BASE + new URLSearchParams({ sheet, tq }).toString();
+
+function gvizCacheKey(sheet, tq) {
+  return `lb_gviz:${SHEET_ID}:${sheet}:${tq}`;
+}
+
+async function fetchGvizText(sheet, tq) {
+  const key = gvizCacheKey(sheet, tq);
+
+  if (!LEMON_FRESH) {
+    const cached = localStorage.getItem(key);
+    if (cached) {
+      try {
+        const { t, txt } = JSON.parse(cached);
+        if (txt && Date.now() - t < LEMON_TTL_MS) {
+          return txt; // ✅ instant
+        }
+      } catch (_) {}
+    }
+  }
+
+  const res = await fetch(GVIZ(sheet, tq));
+  const txt = await res.text();
+
+  // Save cache if response looks like GViz payload
+  if (!LEMON_FRESH && txt && txt.includes('google.visualization.Query')) {
+    try {
+      localStorage.setItem(key, JSON.stringify({ t: Date.now(), txt }));
+    } catch (_) {}
+  }
+
+  return txt;
+}
+
 
 const rows = t => (t?.rows || []).map(r => (r.c || []).map(c => c?.v ?? null));
 
@@ -44,12 +87,11 @@ function getModelKey() {
 const MODEL = getModelKey();
 
 async function gvizQuery(sheet, tq) {
-  const url = GVIZ(sheet, tq);
-  const res = await fetch(url, { cache: 'no-store' });
-  const txt = await res.text();
+  const txt = await fetchGvizText(sheet, tq);
   const json = JSON.parse(txt.substring(47).slice(0, -2));
   return json.table;
 }
+
 
 // ---------- GLOBAL STATE ----------
 
