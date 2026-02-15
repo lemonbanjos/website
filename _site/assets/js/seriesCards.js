@@ -158,7 +158,9 @@ function inferImageRoot({ productsSheet, key }) {
 
   if (sheetLower.includes('neck')) return 'assets/product_images/necks';
   if (k.startsWith('LEGACY35')) return 'assets/product_images/35';
+  if (k.startsWith('LEGACY41')) return 'assets/product_images/41';
   if (k.startsWith('LEGACY54')) return 'assets/product_images/54';
+  if (k.startsWith('LEGACY27')) return 'assets/product_images/27';
   if (k.startsWith('MASTER')) return 'assets/product_images/master';
   if (k.startsWith('OLDTIME')) return 'assets/product_images/oldtime';
   return 'assets/product_images';
@@ -276,6 +278,7 @@ async function initSeriesCards() {
     const productPage = cleanStrSeries(grid.dataset.productPage || '') || 'banjo.html';
     const altNoun = cleanStrSeries(grid.dataset.altNoun || '') || 'banjo';
     const prefix = cleanStrSeries(grid.dataset.seriesPrefix || '').toUpperCase();
+    const seriesLabelFilter = cleanStrSeries(grid.dataset.seriesLabel || '');
 
     const allMode =
       grid.dataset.allProducts === 'true' ||
@@ -291,7 +294,28 @@ async function initSeriesCards() {
     else if (prefix) baseModels = allProducts.filter(p => p.key.toUpperCase().startsWith(prefix + '-'));
     else continue;
 
+    // Optional: restrict this grid to only one series label (exact match)
+    if (seriesLabelFilter) {
+      baseModels = baseModels.filter(p => cleanStrSeries(p.seriesLabel) === seriesLabelFilter);
+    }
+
     grid.querySelectorAll('.loading-message').forEach(m => m.remove());
+
+    // Optional: auto-hide empty sections/grids to avoid blank headings
+    if (!baseModels.length) {
+      // Hide the closest wrapper section (or an explicit wrapper marked for auto-hide)
+      const wrap = grid.closest('[data-auto-hide="true"]') || grid.closest('section') || grid;
+      if (wrap) wrap.style.display = 'none';
+
+      // If there are nav buttons that point at this section, hide those too
+      const sectionId = (wrap && wrap.id) ? wrap.id : '';
+      if (sectionId) {
+        document.querySelectorAll(`[data-jump-to="${sectionId}"]`).forEach(a => {
+          a.style.display = 'none';
+        });
+      }
+      continue;
+    }
 
     const sortState = defaultSort(productsSheet);
 

@@ -20,80 +20,57 @@
       <p class="text-center">
         The Lemon Master Series is a line of banjos that combine modern innovation with exquisite workmanship and artistry. Some Master Series models are inspired by special people, places, or events, while others are specially designed to suit the needs of a master musician.
       </p>
+
+      <!-- Jump buttons (auto-hide if the section has no visible models) -->
+      <div class="series-buttons">
+        <a href="#master-original" class="btn-series" data-jump-to="master-original">View Original Models</a>
+        <a href="#master-tribute" class="btn-series" data-jump-to="master-tribute">View Tribute Models</a>
+      </div>
     </div>
   </section>
 
-<section class="section">
-  <div class="container">
-    <!-- NOTE: no hard-coded cards here either -->
-    <div
-      class="card-grid"
-      data-series-prefix="MASTER"
-      data-image-root="assets/product_images/master">
-	  <div class="loading-message">Tuning banjos...</div>
-	  </div>
-  </div>
-</section>
+  <!-- Master Series (original models) -->
+  <section class="section" id="master-original" data-auto-hide="true">
+    <div class="container narrow">
+      <h2 class="section-title">Original Models</h2>
+      <p class="text-center">
+        Custom-spec banjos designed originally by Lemon Banjos.
+      </p>
+    </div>
+
+    <div class="container">
+      <div
+        class="card-grid"
+        data-series-prefix="MASTER"
+        data-series-label="Master Series - Original"
+        data-image-root="assets/product_images/master">
+        <div class="loading-message">Tuning banjos...</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tribute / special runs (planned) -->
+  <section class="section" id="master-tribute" data-auto-hide="true">
+    <div class="container narrow">
+      <h2 class="section-title">First-Gen Tribute Models</h2>
+      <p class="text-center">
+        Limited or commemorative Master Series builds inspired by first-generation banjo masters.
+      </p>
+    </div>
+
+    <div class="container">
+      <div
+        class="card-grid"
+        data-series-prefix="MASTER"
+        data-series-label="Master Series - First Gen Tribute"
+        data-image-root="assets/product_images/master">
+        <div class="loading-message">Tuning banjos...</div>
+      </div>
+    </div>
+  </section>
 
 
   <div id="footer"></div>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      // --- Tiny GViz helpers just for this page ---
-      const SHEET_ID = '1JaKOJLDKDgEvIg54UKKg2J3fftwOsZlKBw1j5qjeheU';
-
-      const GVIZ = (sheet, tq) =>
-        'https://corsproxy.io/?' +
-        'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?' +
-        new URLSearchParams({ sheet, tq }).toString();
-
-      const rows = t => (t?.rows || []).map(r => (r.c || []).map(c => c?.v ?? null));
-
-      const fmtUSD = n =>
-        new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
-          .format(Number(n) || 0);
-
-      // --- Grab all cards that declare a model key ---
-      const cards = Array.from(document.querySelectorAll('.card[data-model-key]'));
-      if (!cards.length) return;
-
-      const keys = [...new Set(cards.map(c => c.dataset.modelKey.toUpperCase()))];
-      const whereClause = keys.map(k => `A='${k}'`).join(' or ');
-
-      try {
-        const res = await fetch(
-          GVIZ('Banjos', `select A,D where ${whereClause}`),
-          { cache: 'no-store' }
-        );
-        const txt = await res.text();
-        const json = JSON.parse(txt.substring(47).slice(0, -2));
-        const table = json.table;
-        const data = rows(table);
-
-        const priceByKey = {};
-        data.forEach(([key, base]) => {
-          if (!key) return;
-          priceByKey[String(key).trim().toUpperCase()] = Number(base || 0);
-        });
-
-        cards.forEach(card => {
-          const key = card.dataset.modelKey.toUpperCase();
-          const price = priceByKey[key];
-          const el = card.querySelector('.card-price');
-          if (!el) return;
-
-          if (price != null) {
-            el.textContent = 'Starting at ' + fmtUSD(price);
-          } else {
-            el.textContent = ''; // or 'Price TBA'
-          }
-        });
-      } catch (err) {
-        console.error('Error loading legacy card prices', err);
-      }
-    });
-  </script>
 
   <script>
 	  function initHeaderFooter() {
