@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>Shop | Lemon Banjos</title>
+
+  <meta name="description" content="Shop hand-built banjos and reproduction necks from Lemon Banjos.">
+
+  <link rel="canonical" href="https://www.lemonbanjos.com/shop.html">
+
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+</head>
+<body>
+
+  <div id="header"></div>
+
+  <!-- SHOP LANDING -->
+  <section class="section">
+    <div class="container narrow">
+      <h1 class="section-title">Shop</h1>
+      <p class="section-tagline">
+        Hand-built instruments and parts, crafted in West Virginia.
+      </p>
+    </div>
+
+    <div class="container">
+
+      <div class="card-grid">
+
+        <!-- BANJOS -->
+        <a class="card-link" href="standardBanjos.html">
+          <article class="card">
+
+            <img
+              loading="lazy"
+              src="assets/product_images/35/lb-3/1.webp"
+              alt="Lemon Banjos"
+              class="card-img"
+            >
+
+            <div class="card-body">
+              <h3 class="card-title">Banjos</h3>
+              <p>View All Banjos →</p>
+            </div>
+
+          </article>
+        </a>
+
+
+        <!-- NECKS -->
+        <a class="card-link" href="allNecks.html">
+          <article class="card">
+
+            <img
+              loading="lazy"
+              src="assets/product_images/necks/1926-rb4/1.webp"
+              alt="Banjo Necks"
+              class="card-img"
+            >
+
+            <div class="card-body">
+              <h3 class="card-title">Necks</h3>
+              <p>View All Necks →</p>
+            </div>
+
+          </article>
+        </a>
+
+      </div>
+
+    </div>
+  </section>
+
+  <div id="footer"></div>
+
+
+  <!-- SAME HEADER / FOOTER SCRIPT -->
+  <script>
+    function initHeaderFooter() {
+      return Promise.all([
+        fetch('header.html').then(r => r.text()).then(h => {
+          document.getElementById('header').innerHTML = h;
+        }),
+        fetch('footer.html').then(r => r.text()).then(f => {
+          document.getElementById('footer').innerHTML = f;
+        })
+      ]).then(() => {
+
+        const toggle = document.getElementById('menu-toggle');
+        const nav = document.getElementById('main-nav');
+
+        if (toggle && nav) {
+          toggle.addEventListener('click', () => {
+
+            const isOpen = nav.classList.toggle('open');
+
+            toggle.setAttribute(
+              'aria-expanded',
+              isOpen ? 'true' : 'false'
+            );
+
+          });
+        }
+
+      });
+    }
+
+    initHeaderFooter().catch(console.error);
+  </script>
+
+</body>
+</html>
