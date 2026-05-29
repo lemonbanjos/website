@@ -133,7 +133,7 @@ async function loadData(modelKey) {
 
   const [prodT, optT, specT] = await Promise.all([
     // NOTE: I (video URL) and K (visible)
-    gvizQuery(SHEETS.products, `select A,B,C,D,E,F,G,H,I,K,L where A='${key}'`),
+    gvizQuery(SHEETS.products, `select A,B,C,D,E,F,G,H,I,K,L,M where A='${key}'`),
     gvizQuery(SHEETS.options,  `select B,C,D,E,F,G,H,I,J where A='${key}'`),
     gvizQuery(SHEETS.specs,    `select B,C,D,E where A='${key}' order by B asc, E asc`)
   ]);
@@ -152,7 +152,8 @@ async function loadData(modelKey) {
     pImageCount,
     pVideoUrl,
     pVisible,
-    pDescription
+    pDescription,
+	pDepositPercent
   ] = prodRow;
 
   if (!pKey) {
@@ -198,7 +199,8 @@ async function loadData(modelKey) {
     image_count,
     video_url,
     visible,
-    description: cleanStr(pDescription)
+    description: cleanStr(pDescription),
+	deposit_percent: Number(pDepositPercent || 0)
   };
 
   // ---------- Options ----------
@@ -621,7 +623,24 @@ function recalcPrice() {
       badge.style.display = 'none';
     }
   }
+const depositEl = document.getElementById('productDeposit');
 
+if (depositEl) {
+  const depositPercent = Number(p.deposit_percent || 0);
+  const finalDisplayPrice =
+    p.sale_active && totalSale > 0 ? totalSale : totalRegular;
+
+  if (depositPercent > 0 && finalDisplayPrice > 0) {
+    const depositAmount = finalDisplayPrice * (depositPercent / 100);
+
+    depositEl.textContent =
+      `Requires a ${depositPercent}% non-refundable deposit (${fmtUSD(depositAmount)}) to reserve your build slot and begin construction. The remaining balance may be paid in installments during the build process.`;
+    depositEl.style.display = '';
+  } else {
+    depositEl.textContent = '';
+    depositEl.style.display = 'none';
+  }
+}
   // Update config used by EmailJS
   updateEmailConfig();
 }

@@ -47,6 +47,8 @@
         <div class="product-price-block">
           <p id="productBasePrice" style="font-size: 0.85rem; opacity: 0.65; margin-bottom: -4px;"></p>
           <h2><em id="productPrice" aria-live="polite">Loading…</em></h2>
+		  
+		  <p id="productDeposit" class="deposit-note"></p>
         </div>
 
         <div class="product-details">
@@ -350,6 +352,7 @@
               `SERIES: ${cfg.series || ''}`,
               `BASE PRICE: ${priceEl?.dataset?.base || ''}`,
               `DISPLAYED PRICE: ${priceEl?.textContent || ''}`,
+			  `DEPOSIT REQUIRED: ${document.getElementById('productDeposit')?.textContent || ''}`,
               ``,
               `SELECTIONS:`,
               selectionsFromDOM().map(([g,v]) => `- ${g}: ${v}`).join('\n'),

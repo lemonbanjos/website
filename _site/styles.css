@@ -2279,3 +2279,9 @@ figure.about-photo figcaption {
     font-size: 1.85rem;
   }
 }
+.deposit-note {
+  font-size: 0.9rem;
+  opacity: 0.78;
+  margin-top: -0.5rem;
+  font-style: italic;
+}
