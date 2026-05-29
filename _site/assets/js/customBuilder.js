@@ -539,6 +539,26 @@ function recalcPrice() {
   if (basePriceEl) {
     basePriceEl.textContent = `Base price: ${fmtUSD(baseRegular)}`;
   }
+  
+  // Custom builds always require a fixed 50% deposit.
+const depositEl = document.getElementById('productDeposit');
+
+if (depositEl) {
+  const finalDisplayPrice =
+    p.sale_active && totalSale > 0 ? totalSale : totalRegular;
+
+  if (finalDisplayPrice > 0) {
+    const depositAmount = finalDisplayPrice * 0.5;
+
+    depositEl.textContent =
+      `Requires a 50% non-refundable deposit (${fmtUSD(depositAmount)}) to reserve your build slot and begin construction. The remaining balance may be paid in installments during the build process.`;
+
+    depositEl.style.display = '';
+  } else {
+    depositEl.textContent = '';
+    depositEl.style.display = 'none';
+  }
+}
 }
 
 // ---------- EMAIL CONFIG ----------
