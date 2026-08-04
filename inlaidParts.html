@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inlaid Fingerboards &amp; Pegheads | Lemon Banjos</title>
+  <meta name="description" content="Shop completed inlaid fingerboards and pegheads from Lemon Banjos.">
+  <link rel="canonical" href="https://www.lemonbanjos.com/inlaidParts.html">
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+</head>
+<body>
+  <div id="header"></div>
+
+  <section class="section">
+    <div class="container narrow">
+      <h1 class="section-title">Inlaid Fingerboards &amp; Pegheads</h1>
+      <p class="section-tagline">Completed fingerboards and peghead overlays with pearl inlay installed.</p>
+    </div>
+
+    <div class="container">
+      <div id="productGrid" class="card-grid" aria-live="polite"></div>
+      <p id="emptyMessage" class="small" style="display:none;">No inlaid fingerboards or pegheads are currently listed.</p>
+    </div>
+  </section>
+
+  <div id="footer"></div>
+
+  <script>
+    const SHEET_ID = '1JaKOJLDKDgEvIg54UKKg2J3fftwOsZlKBw1j5qjeheU';
+    const SHEET = 'Inlaid_Parts';
+    const clean = v => (v == null ? '' : String(v).trim());
+    const fmtUSD = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(n) || 0);
+    const rows = t => (t?.rows || []).map(r => (r.c || []).map(c => c?.v ?? null));
+
+    function gvizQuery(sheet, tq) {
+      return new Promise((resolve, reject) => {
+        const cb = `__gviz_${Date.now()}_${Math.floor(Math.random()*1e9)}`;
+        const url = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?' + new URLSearchParams({ sheet, tq, tqx: 'responseHandler:' + cb }).toString();
+        const script = document.createElement('script'); script.src = url; script.async = true;
+        const timeout = setTimeout(() => { cleanup(); reject(new Error('GViz request timed out')); }, 15000);
+        function cleanup() { clearTimeout(timeout); script.remove(); try { delete window[cb]; } catch (_) {} }
+        window[cb] = response => { cleanup(); response?.status === 'error' ? reject(new Error('GViz error')) : resolve(response?.table); };
+        script.onerror = () => { cleanup(); reject(new Error('Failed to load product data')); };
+        document.head.appendChild(script);
+      });
+    }
+
+    function isTrue(v) { return v == null || v === true || v === 1 || String(v).toLowerCase() === 'true'; }
+
+    async function loadProducts() {
+      const grid = document.getElementById('productGrid');
+      const empty = document.getElementById('emptyMessage');
+      try {
+        const table = await gvizQuery(SHEET, 'select A,B,C,D,E,F,G,H,J,K,L');
+        const data = rows(table).filter(r => r[0] && isTrue(r[9]));
+        if (!data.length) { empty.style.display = ''; return; }
+
+        data.forEach(r => {
+          const [key, title, series, basePrice, salePrice, saleLabel, saleActive] = r;
+          const saleOn = isTrue(saleActive) && Number(salePrice) > 0;
+          const slug = clean(key).toLowerCase();
+          const image = `assets/product_images/inlay/parts/${slug}/1.webp`;
+          const href = `inlaidPartProduct.html?key=${encodeURIComponent(clean(key))}`;
+          const a = document.createElement('a');
+          a.className = 'card-link'; a.href = href;
+          a.innerHTML = `
+            <article class="card">
+              <img loading="lazy" src="${image}" alt="${clean(title)}" class="card-img">
+              <div class="card-body">
+                ${clean(series) ? `<p class="small">${clean(series)}</p>` : ''}
+                <h3 class="card-title">${clean(title)}</h3>
+                <p>${saleOn ? `<s>${fmtUSD(basePrice)}</s> ${fmtUSD(salePrice)}` : fmtUSD(basePrice)}</p>
+                ${saleOn && clean(saleLabel) ? `<p class="small">${clean(saleLabel)}</p>` : ''}
+              </div>
+            </article>`;
+          grid.appendChild(a);
+        });
+      } catch (err) {
+        console.error(err);
+        empty.textContent = 'Could not load inlaid parts.';
+        empty.style.display = '';
+      }
+    }
+
+    function initHeaderFooter() {
+      return Promise.all([
+        fetch('header.html').then(r => r.text()).then(h => document.getElementById('header').innerHTML = h),
+        fetch('footer.html').then(r => r.text()).then(f => document.getElementById('footer').innerHTML = f)
+      ]).then(() => {
+        const toggle = document.getElementById('menu-toggle');
+        const nav = document.getElementById('main-nav');
+        if (toggle && nav) toggle.addEventListener('click', () => {
+          const isOpen = nav.classList.toggle('open');
+          toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+      });
+    }
+
+    initHeaderFooter().catch(console.error);
+    loadProducts();
+  </script>
+</body>
+</html>
