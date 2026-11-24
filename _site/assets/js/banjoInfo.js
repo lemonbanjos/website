@@ -605,15 +605,15 @@ function recalcPrice() {
     }
   }
 
-  const priceBlock = document.querySelector('.product-price-block');
-  if (priceBlock) {
-    let badge = document.getElementById('saleBadge');
-    if (!badge) {
-      badge = document.createElement('span');
-      badge.id = 'saleBadge';
-      badge.className = 'sale-pill';
-      priceBlock.appendChild(badge);
-    }
+const priceBlock = document.querySelector('.product-price-block');
+if (priceBlock) {
+  let badge = document.getElementById('saleBadge');
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.id = 'saleBadge';
+    badge.className = 'sale-pill';
+    priceBlock.insertBefore(badge, document.getElementById('productDeposit'));
+  }
 
     if (p.sale_active && p.sale_label) {
       badge.textContent = p.sale_label;
@@ -633,8 +633,10 @@ if (depositEl) {
   if (depositPercent > 0 && finalDisplayPrice > 0) {
     const depositAmount = finalDisplayPrice * (depositPercent / 100);
 
-    depositEl.textContent =
-      `Requires a ${depositPercent}% non-refundable deposit (${fmtUSD(depositAmount)}) to reserve your build slot and begin construction. The remaining balance may be paid in installments during the build process.`;
+    depositEl.innerHTML =
+      `Requires a <strong>${depositPercent}% non-refundable deposit (${fmtUSD(depositAmount)})</strong> to reserve your build slot and begin construction. The remaining balance may be paid in installments during the build process. 
+	  <br><br>
+	  <strong>Estimated Lead Time:</strong> 6–12 months, although some builds may require 24 months or longer. Completion dates are not guaranteed.`;
     depositEl.style.display = '';
   } else {
     depositEl.textContent = '';
